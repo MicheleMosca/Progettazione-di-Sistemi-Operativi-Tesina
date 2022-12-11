@@ -1,1 +1,1 @@
-# Progettazione-di-sistemi-operativi-tesina
+# Progettazione di Sistemi Operativi Tesina
