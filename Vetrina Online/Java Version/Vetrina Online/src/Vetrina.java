@@ -62,7 +62,7 @@ public class Vetrina extends Monitor
             }
             if(trovato == -1)
             {
-                // Nessun corriere  libero
+                // Nessun corriere e' libero
                 System.out.println(nome + " mi sospendo perche' non ci sono corrieri liberi");
                 this.attesaCorriere[tipo].Wait();
             }
@@ -109,7 +109,7 @@ public class Vetrina extends Monitor
     {
         entraMonitor();
 
-
+        this.attesaConsegna.Signal();
         System.out.println(nome + " ho consegnato, ora rientro");
         this.corrieri[id] = -1;
 

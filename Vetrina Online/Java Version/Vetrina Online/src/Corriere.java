@@ -24,13 +24,13 @@ public class Corriere extends Thread {
         {
             v.parti(id, nome);
             try {
-                sleep(5);
+                sleep(5000);
             }
             catch (InterruptedException ie) {}
             v.consegna(id, nome);
             // ritorno
             try {
-                sleep(5);
+                sleep(5000);
             }
             catch (InterruptedException ie) {}
         }
