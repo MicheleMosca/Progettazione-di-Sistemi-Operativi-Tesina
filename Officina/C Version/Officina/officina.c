@@ -23,7 +23,7 @@ int *coda_bollino_blu;  /* array contenente l'id dei threads AUTO in coda per il
 int contatore_tagliando;    /* variabile contatore che indica quante auto sono in coda per il controllo per il tagliando */
 int *coda_tagliando;    /* array contenente l'id dei threads AUTO in coda per il controllo per il tagliando */
 
-int *automobili;    /* array di automobili che contiene l'id del thread OPERAIO che la sta servendo, inizializzata a -1 (AUTO_NON_SERITA). Con -2 (AUTO_SERITA) indichiamo che l'operazione di controllo sull 'auto e' stata effettuata */
+int *automobili;    /* array di automobili che contiene l'id del thread OPERAIO che la sta servendo, inizializzato a -1 (AUTO_NON_SERITA). Con -2 (AUTO_SERITA) indichiamo che l'operazione di controllo sull'auto e' stata effettuata */
 
 int NUM_THREADS_OPERAI; /* variabile contenente il numero totale di operai scelti per la risoluzione del problema */
 
@@ -60,7 +60,7 @@ void inizia_controllo(int id, int *durata, int tipo, int *id_auto)
             automobili[*id_auto - NUM_THREADS_OPERAI] = id;
 
             /* rimuovo l'auto dalla coda */
-            coda_bollino_blu[contatore_bollino_blu] = -1;
+            coda_bollino_blu[contatore_bollino_blu -1] = -1;
             contatore_bollino_blu--;
 
             /* calcolo la durata del controllo */
@@ -77,7 +77,7 @@ void inizia_controllo(int id, int *durata, int tipo, int *id_auto)
             automobili[*id_auto - NUM_THREADS_OPERAI] = id;
 
             /* rimuovo l'auto dalla coda */
-            coda_tagliando[contatore_tagliando] = -1;
+            coda_tagliando[contatore_tagliando -1] = -1;
             contatore_tagliando--;
 
             /* calcolo la durata del controllo */
@@ -102,7 +102,7 @@ void inizia_controllo(int id, int *durata, int tipo, int *id_auto)
         automobili[*id_auto - NUM_THREADS_OPERAI] = id;
 
         /* rimuovo l'auto dalla coda */
-        coda_tagliando[contatore_tagliando] = -1;
+        coda_tagliando[contatore_tagliando -1] = -1;
         contatore_tagliando--;
 
         /* calcolo la durata del controllo */
