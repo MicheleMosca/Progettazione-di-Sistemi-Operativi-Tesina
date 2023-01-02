@@ -7,23 +7,25 @@
 #include <time.h>
 
 #define MAX_DURATA_OPERAZIONE 7
+#define AUTO_NON_SERVITA -1
+#define AUTO_SERVITA -2
 
 typedef enum {false, true} Boolean;
 
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;  /* semaforo binario per la mutua esclusione nell'accesso alle procedure entry del monitor */
-pthread_cond_t auto_in_coda = PTHREAD_COND_INITIALIZER; /* condition variable per attendere che un auto si metta in coda */
-pthread_cond_t *attesa_controllo;   /* array di condition variable in cui le automobili si bloccano in attesa che un operaio prenda in carico la sua richiesta */
-pthread_cond_t *attesa_termine;   /* array di condition variable in cui le automobili si bloccano in attesa che un operaio termini il controllo */
+pthread_cond_t auto_in_coda = PTHREAD_COND_INITIALIZER; /* condition variable in cui gli operai si bloccano in attesa che un auto si metta in coda */
+pthread_cond_t attesa_controllo = PTHREAD_COND_INITIALIZER;   /* condition variable in cui le automobili si bloccano in attesa che un operaio prenda in carico la sua richiesta */
+pthread_cond_t attesa_termine = PTHREAD_COND_INITIALIZER;   /* condition variable in cui le automobili si bloccano in attesa che un operaio termini il controllo */
 
-int contatore_bollino_blu;
-int *coda_bollino_blu;
+int contatore_bollino_blu;  /* variabile contatore che indica quante auto sono in coda per il controllo per il bollino blu */
+int *coda_bollino_blu;  /* array contenente l'id dei threads AUTO in coda per il controllo per il bollino blu */
 
-int contatore_tagliando;
-int *coda_tagliando;
+int contatore_tagliando;    /* variabile contatore che indica quante auto sono in coda per il controllo per il tagliando */
+int *coda_tagliando;    /* array contenente l'id dei threads AUTO in coda per il controllo per il tagliando */
 
-int *automobili;    /* array di automobili che contiene l'id del operaio che la sta servendo, inizializzata a -1 (nessun operaio) */
+int *automobili;    /* array di automobili che contiene l'id del thread OPERAIO che la sta servendo, inizializzata a -1 (AUTO_NON_SERITA). Con -2 (AUTO_SERITA) indichiamo che l'operazione di controllo sull 'auto e' stata effettuata */
 
-int NUM_THREADS_OPERAI;
+int NUM_THREADS_OPERAI; /* variabile contenente il numero totale di operai scelti per la risoluzione del problema */
 
 int mia_random(int MAX)
 {
@@ -64,11 +66,11 @@ void inizia_controllo(int id, int *durata, int tipo, int *id_auto)
             /* calcolo la durata del controllo */
             *durata = mia_random(MAX_DURATA_OPERAZIONE/2);   /* i controlli per il bollino blu sono piu' veloci rispetto a quello del tagliando */
 
-            printf("OPERAIO_TIPO_%d-[Thread%d e identificatore %lu] prendo in carico l'auto con id %d per un controllo di BOLLINO BLU di durata %d\n", tipo, id, pthread_self(), *id_auto, *durata);
+            printf("OPERAIO_TIPO_%d-[Thread%d e identificatore %lu] prendo in carico l'auto con id %d per un controllo di BOLLINO BLU di durata %d secondi\n", tipo, id, pthread_self(), *id_auto, *durata);
         }
         else
         {
-            printf("OPERAIO_TIPO_%d-[Thread%d e identificatore %lu] auto con tipologia TAGLIANDO in coda, effettuo il controllo\n", tipo, id, pthread_self());
+            printf("OPERAIO_TIPO_%d-[Thread%d e identificatore %lu] auto con tipologia TAGLIANDO in coda, la rimuovo dalla coda\n", tipo, id, pthread_self());
 
             /* prendo in carica l'ultima auto che c'e' in coda */
             *id_auto = coda_tagliando[contatore_tagliando -1];
@@ -81,7 +83,7 @@ void inizia_controllo(int id, int *durata, int tipo, int *id_auto)
             /* calcolo la durata del controllo */
             *durata = mia_random(MAX_DURATA_OPERAZIONE);   /* i controlli per il bollino blu sono piu' veloci rispetto a quello del tagliando */
 
-            printf("OPERAIO_TIPO_%d-[Thread%d e identificatore %lu] prendo in carico l'auto con id %d per un controllo di TAGLIANDO di durata %d\n", tipo, id, pthread_self(), *id_auto, *durata);
+            printf("OPERAIO_TIPO_%d-[Thread%d e identificatore %lu] prendo in carico l'auto con id %d per un controllo di TAGLIANDO di durata %d secondi\n", tipo, id, pthread_self(), *id_auto, *durata);
         }
     }
     else
@@ -93,7 +95,7 @@ void inizia_controllo(int id, int *durata, int tipo, int *id_auto)
             pthread_cond_wait(&auto_in_coda, &mutex);
         }
 
-        printf("OPERAIO_TIPO_%d-[Thread%d e identificatore %lu] auto con tipologia TAGLIANDO in coda, effettuo il controllo\n", tipo, id, pthread_self());
+        printf("OPERAIO_TIPO_%d-[Thread%d e identificatore %lu] auto con tipologia TAGLIANDO in coda, la rimuovo dalla coda\n", tipo, id, pthread_self());
 
         /* prendo in carica l'ultima auto che c'e' in coda */
         *id_auto = coda_tagliando[contatore_tagliando -1];
@@ -105,11 +107,11 @@ void inizia_controllo(int id, int *durata, int tipo, int *id_auto)
 
         /* calcolo la durata del controllo */
         *durata = mia_random(MAX_DURATA_OPERAZIONE);   /* i controlli per il bollino blu sono piu' veloci rispetto a quello del tagliando */
-        printf("OPERAIO_TIPO_%d-[Thread%d e identificatore %lu] prendo in carico l'auto con id %d per un controllo di TAGLIANDO di durata %d\n", tipo, id, pthread_self(), *id_auto, *durata);
+        printf("OPERAIO_TIPO_%d-[Thread%d e identificatore %lu] prendo in carico l'auto con id %d per un controllo di TAGLIANDO di durata %d secondi\n", tipo, id, pthread_self(), *id_auto, *durata);
     }
 
     /* notifico l'auto di aver appena iniziato il controllo */
-    pthread_cond_signal(&attesa_controllo[*id_auto - NUM_THREADS_OPERAI]);
+    pthread_cond_broadcast(&attesa_controllo);
 
     pthread_mutex_unlock(&mutex);   /* simulazione del termine di una procedure entry di un monitor */
 }
@@ -121,10 +123,10 @@ void fine_controllo(int id, int tipo, int *id_auto)
     printf("OPERAIO_TIPO_%d-[Thread%d e identificatore %lu] controllo sull'auto %d TERMINATO\n", tipo, id, pthread_self(), *id_auto);
 
     /* modifico lo stato dell'auto in controllo effettuato (-2) */
-    automobili[*id_auto - NUM_THREADS_OPERAI] = -2;
+    automobili[*id_auto - NUM_THREADS_OPERAI] = AUTO_SERVITA;
 
     /* notifico l'auto del completamento del controllo */
-    pthread_cond_signal(&attesa_termine[*id_auto - NUM_THREADS_OPERAI]);
+    pthread_cond_broadcast(&attesa_termine);
 
     pthread_mutex_unlock(&mutex);   /* simulazione del termine di una procedure entry di un monitor */
 }
@@ -153,18 +155,18 @@ void auto_entra(int id, int tipo_operazione)
     /* sveglio gli operai in attesa per poter essere servito */
     pthread_cond_broadcast(&auto_in_coda);
 
-    while(automobili[id - NUM_THREADS_OPERAI] == -1)
+    while(automobili[id - NUM_THREADS_OPERAI] == AUTO_NON_SERVITA)
     {
         /* mi metto in attesa che un operaio effettui il controllo */
-        pthread_cond_wait(&attesa_controllo[id - NUM_THREADS_OPERAI], &mutex);
+        pthread_cond_wait(&attesa_controllo, &mutex);
     }
 
     printf("AUTO-[Thread%d e identificatore %lu] l'operario con id %d ha appena preso in carico il mio controllo\n", id, pthread_self(), automobili[id - NUM_THREADS_OPERAI]);
 
-    while (automobili[id - NUM_THREADS_OPERAI] != -2)
+    while (automobili[id - NUM_THREADS_OPERAI] != AUTO_SERVITA)
     {
         /* il controllo dell'auto e' appena iniziato, attendo il termine */
-        pthread_cond_wait(&attesa_termine[id - NUM_THREADS_OPERAI], &mutex);
+        pthread_cond_wait(&attesa_termine, &mutex);
     }
 
     pthread_mutex_unlock(&mutex);   /* simulazione del termine di una procedure entry di un monitor */
@@ -224,6 +226,8 @@ void *eseguiOperaioTipo0(void *id)
         fine_controllo(*pi, 0, &id_auto);
     }
 
+    /* NB: QUESTA PARTE DI CODICE NON VERRA' MAI ESEGUITA IN QUANTO GLI OPERAI SONO IN UN CICLO INFINITO */
+
     printf("OPERAIO_TIPO_1-[Thread%d e identificatore %lu] VADO A CASA\n", *pi, pthread_self());
 
     /* pthread vuole tornare al padre il valore del suo id */
@@ -258,6 +262,7 @@ void *eseguiOperaioTipo1(void *id)
         fine_controllo(*pi, 1, &id_auto);
     }
 
+    /* NB: QUESTA PARTE DI CODICE NON VERRA' MAI ESEGUITA IN QUANTO GLI OPERAI SONO IN UN CICLO INFINITO */
 
     printf("OPERAIO_TIPO_1-[Thread%d e identificatore %lu] STO ARRIVANDO\n", *pi, pthread_self());
 
@@ -321,13 +326,21 @@ int main(int argc, char **argv)
         exit(4);
     }
 
-    /* Definisco quanti THREADS OPERAI sono di tipo 0 e quanti di tipo 1 */
-    NUM_THREADS_OPERAI_TIPO_0 = 2 * (NUM_THREADS_OPERAI/3);
+    /* Definisco quanti THREADS OPERAI sono di tipo 0 e quanti di tipo 1 mediante il criterio: ogni 3 operai due sono di tipo 0 e uno di tipo 1 */
+    if (NUM_THREADS_OPERAI == 1)
+        NUM_THREADS_OPERAI_TIPO_0 = 1;
+    else if (NUM_THREADS_OPERAI == 2)
+        NUM_THREADS_OPERAI_TIPO_0 = 2;
+    else
+        NUM_THREADS_OPERAI_TIPO_0 = 2 * (NUM_THREADS_OPERAI/3);
+
+    printf("Numero Operai Tipo 0: %d\n", NUM_THREADS_OPERAI_TIPO_0);
+    printf("Numero Operai Tipo 1: %d\n", NUM_THREADS_OPERAI - NUM_THREADS_OPERAI_TIPO_0);
 
     /* Inizializzo l'array di automobili */
     automobili = (int *) malloc(NUM_THREADS_AUTO * sizeof(int));
     for (i = 0; i < NUM_THREADS_AUTO; i++)
-        automobili[i] = -1;
+        automobili[i] = AUTO_NON_SERVITA;
 
     /* Inizializzo l'array della coda di auto per il bollino blu */
     coda_bollino_blu = (int *) malloc(NUM_THREADS_AUTO * sizeof(int));
@@ -343,30 +356,6 @@ int main(int argc, char **argv)
     for (i = 0; i < NUM_THREADS_AUTO; i++)
     {
         coda_tagliando[i] = -1;
-    }
-
-    /* Inizializzo l'array di condition variable attesa_controllo */
-    attesa_controllo = (pthread_cond_t *) malloc(NUM_THREADS_AUTO * sizeof(pthread_cond_t));
-    for (i = 0; i < NUM_THREADS_AUTO; i++)
-    {
-        if (pthread_cond_init(&attesa_controllo[i], NULL) != 0)
-        {
-            sprintf(error, "Errore: Problemi con la creazione della condition variable di attesa_controllo\n");
-            perror(error);
-            exit(4);
-        }
-    }
-
-    /* Inizializzo l'array di condition variable attesa_termine */
-    attesa_termine = (pthread_cond_t *) malloc(NUM_THREADS_AUTO * sizeof(pthread_cond_t));
-    for (i = 0; i < NUM_THREADS_AUTO; i++)
-    {
-        if (pthread_cond_init(&attesa_termine[i], NULL) != 0)
-        {
-            sprintf(error, "Errore: Problemi con la creazione della condition variable di attesa_termine\n");
-            perror(error);
-            exit(4);
-        }
     }
 
     /* Creo i thread OPERAI0_TIPO_0 */
@@ -397,6 +386,9 @@ int main(int argc, char **argv)
         printf("SONO IL MAIN e ho creato il Pthread OPERAIO_TIPO_1 %i-esimo con id=%lu\n", i, thread[i]);
     }
 
+    /* effettuo una sleep di 1 secondo per accertarmi che gli operai siano tutti operativi prima dell'arrivo delle auto */
+    sleep(1);
+
     /* Creo i thread AUTO */
     for (i = NUM_THREADS_OPERAI; i < NUM_THREADS; i++)
     {
@@ -420,6 +412,15 @@ int main(int argc, char **argv)
         printf("Pthread %d-esimo restituisce %d\n", i, ris);
     }
 
+    /* stampa dello stato finale delle code e delle automobili */
+    printf("Contatore coda auto bollino blu: %d\n", contatore_bollino_blu);
+    printf("Contatore coda auto tagliando: %d\n", contatore_tagliando);
+    printf("Stato automobili: [ ");
+    for (i = 0; i < NUM_THREADS_AUTO; i++)
+    {
+        printf("%d ", automobili[i]);
+    }
+    printf("]\n");
+
     exit(0);
 }
-
