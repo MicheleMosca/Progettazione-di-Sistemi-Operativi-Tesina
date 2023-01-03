@@ -27,6 +27,9 @@ int *automobili;    /* array di automobili che contiene l'id del thread OPERAIO 
 
 int NUM_THREADS_OPERAI; /* variabile contenente il numero totale di operai scelti per la risoluzione del problema */
 
+int NUM_AUTO_BOLLINO_BLU;
+int NUM_AUTO_TAGLIANDO;
+
 int mia_random(int MAX)
 {
     int casuale;    /* variabilie che conterra' il numero casuale */
@@ -172,6 +175,41 @@ void auto_entra(int id, int tipo_operazione)
     pthread_mutex_unlock(&mutex);   /* simulazione del termine di una procedure entry di un monitor */
 }
 
+int generazione_random_tipo_operazione()
+{
+    int random; /* variabile che conterra' il valore di ritorno della funzione mia_random per la scelta del tipo di operazione che l'auto deve effettuare */
+
+    /* ci sono ancora delle auto bollino blu e delle auto tagliando da generare */
+    if (NUM_AUTO_BOLLINO_BLU > 0 && NUM_AUTO_TAGLIANDO > 0)
+    {
+        /* genero la tipologia dell'operazione che l'auto deve effettuare in modo random */
+        random = mia_random(2) - 1; /* sottraggo di 1 perche' la mia_random genera numeri da 1 a MAX, a noi serve da 0 a 1 */
+
+        if (random == 0)    /* operazione selezionata in modo random: Bollino Blu */
+        {
+            /* diminuisco il numero di auto bollino blu da generare */
+            NUM_AUTO_BOLLINO_BLU--;
+            return 0;
+        }
+
+        /* random ha valore 1, dunque l'operazione da effettuare e' Tagliando, diminuisco il numero di auto ancora da generare */
+        NUM_AUTO_TAGLIANDO--;
+        return 1;
+    }
+    else if (NUM_AUTO_BOLLINO_BLU > 0)
+    {
+        /* sono rimaste solo auto da bollino blu da generare, diminuisco il numero di uno */
+        NUM_AUTO_BOLLINO_BLU--;
+        return 0;
+    }
+    else
+    {
+        /* sono rimaste solo auto tagliando da generare, diminuisco il numero di uno */
+        NUM_AUTO_TAGLIANDO--;
+        return 1;
+    }
+}
+
 void *eseguiAuto(void *id)
 {
     int *pi = (int *) id;
@@ -188,7 +226,7 @@ void *eseguiAuto(void *id)
     printf("AUTO-[Thread%d e identificatore %lu] STO ARRIVANDO\n", *pi, pthread_self());
 
     /* effettuo la scelta del tipo di operazione da effettuare */
-    tipo_operazione = mia_random(2) - 1;    /* sottraggo di 1 perche' la mia_random genera numeri da 1 a MAX, a noi serve da 0 a 1 */
+    tipo_operazione = generazione_random_tipo_operazione();
 
     auto_entra(*pi, tipo_operazione);
 
@@ -284,9 +322,9 @@ int main(int argc, char **argv)
     int NUM_THREADS_AUTO;
 
     /* Controllo sul numero di parametri */
-    if (argc != 3)  /* Soltanto due parametri devono essere passati; Il numero di OPERAI e il numero di AUTO */
+    if (argc != 4)  /* Soltanto due parametri devono essere passati; Il numero di OPERAI e il numero di AUTO */
     {
-        sprintf(error, "Errore: Numero dei parametri non corretto. Utilizzo: %s NUMERO_OPERAI NUMERO_AUTO \n", argv[0]);
+        sprintf(error, "Errore: Numero dei parametri non corretto. Utilizzo: %s NUMERO_OPERAI NUMERO_AUTO_BOLLINO_BLU NUMERO_AUTO_TAGLIANDO \n", argv[0]);
         perror(error);
         exit(1);
     }
@@ -298,14 +336,29 @@ int main(int argc, char **argv)
         perror(error);
         exit(2);
     }
+    printf("Numero totale OPERAI: %d\n", NUM_THREADS_OPERAI);
 
-    NUM_THREADS_AUTO = atoi(argv[2]);
-    if (NUM_THREADS_AUTO <= 0)   /* Controllo che il numero di thread AUTO da creare sia maggiore di zero */
+    NUM_AUTO_BOLLINO_BLU = atoi(argv[2]);
+    if (NUM_AUTO_BOLLINO_BLU <= 0)   /* Controllo che il numero di thread AUTO_BOLLINO_BLU da creare sia maggiore di zero */
     {
-        sprintf(error, "Errore: Numero di thread AUTO insufficienti per l'avvio del programma\n");
+        sprintf(error, "Errore: Numero di thread AUTO_BOLLINO_BLU insufficienti per l'avvio del programma\n");
         perror(error);
         exit(3);
     }
+    printf("Numero AUTO_BOLLINO_BLU: %d\n", NUM_AUTO_BOLLINO_BLU);
+
+    NUM_AUTO_TAGLIANDO = atoi(argv[3]);
+    if (NUM_AUTO_TAGLIANDO <= 0)   /* Controllo che il numero di thread AUTO_TAGLIANDO da creare sia maggiore di zero */
+    {
+        sprintf(error, "Errore: Numero di thread AUTO_TAGLIANDO insufficienti per l'avvio del programma\n");
+        perror(error);
+        exit(3);
+    }
+    printf("Numero AUTO_TAGLIANDO: %d\n", NUM_AUTO_TAGLIANDO);
+
+    /* Calcolo il numero di AUTO totale */
+    NUM_THREADS_AUTO = NUM_AUTO_BOLLINO_BLU + NUM_AUTO_TAGLIANDO;
+    printf("Numero totale di AUTO: %d\n", NUM_THREADS_AUTO);
 
     /* Calcolo del numero di THREADS totali */
     NUM_THREADS = NUM_THREADS_OPERAI + NUM_THREADS_AUTO;
