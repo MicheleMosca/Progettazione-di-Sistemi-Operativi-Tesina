@@ -37,7 +37,7 @@ int NUM_THREADS_CORRIERI;   /* variabile che indica il numero di threads CORRIER
 
 int mia_random(int MAX)
 {
-    int casuale;    /* variable che conterra' il numero casuale */
+    int casuale;    /* variabile che conterra' il numero casuale */
 
     casuale = rand() % MAX;
     casuale++;  /* incremento il risultato dato che la rand produce un numero random fra 0 e MAX-1, mentre a me serviva un numero fra 1 e MAX */
