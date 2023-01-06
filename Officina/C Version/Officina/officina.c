@@ -339,7 +339,7 @@ int main(int argc, char **argv)
     printf("Numero totale OPERAI: %d\n", NUM_THREADS_OPERAI);
 
     NUM_AUTO_BOLLINO_BLU = atoi(argv[2]);
-    if (NUM_AUTO_BOLLINO_BLU <= 0)   /* Controllo che il numero di thread AUTO_BOLLINO_BLU da creare sia maggiore di zero */
+    if (NUM_AUTO_BOLLINO_BLU < 0)   /* Controllo che il numero di thread AUTO_BOLLINO_BLU da creare sia maggiore o uguale a zero */
     {
         sprintf(error, "Errore: Numero di thread AUTO_BOLLINO_BLU insufficienti per l'avvio del programma\n");
         perror(error);
@@ -348,7 +348,7 @@ int main(int argc, char **argv)
     printf("Numero AUTO_BOLLINO_BLU: %d\n", NUM_AUTO_BOLLINO_BLU);
 
     NUM_AUTO_TAGLIANDO = atoi(argv[3]);
-    if (NUM_AUTO_TAGLIANDO <= 0)   /* Controllo che il numero di thread AUTO_TAGLIANDO da creare sia maggiore di zero */
+    if (NUM_AUTO_TAGLIANDO < 0)   /* Controllo che il numero di thread AUTO_TAGLIANDO da creare sia maggiore o uguale a zero */
     {
         sprintf(error, "Errore: Numero di thread AUTO_TAGLIANDO insufficienti per l'avvio del programma\n");
         perror(error);
@@ -359,6 +359,14 @@ int main(int argc, char **argv)
     /* Calcolo il numero di AUTO totale */
     NUM_THREADS_AUTO = NUM_AUTO_BOLLINO_BLU + NUM_AUTO_TAGLIANDO;
     printf("Numero totale di AUTO: %d\n", NUM_THREADS_AUTO);
+
+    /* Controllo che il numero di AUTO non sia uguale a zero */
+    if (NUM_THREADS_AUTO == 0)
+    {
+        sprintf(error, "Errore: Numero di thread AUTO insufficienti per l'avvio del programma\n");
+        perror(error);
+        exit(3);
+    }
 
     /* Calcolo del numero di THREADS totali */
     NUM_THREADS = NUM_THREADS_OPERAI + NUM_THREADS_AUTO;
