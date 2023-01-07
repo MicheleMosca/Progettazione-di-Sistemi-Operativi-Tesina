@@ -25,11 +25,11 @@ pthread_cond_t utenti_in_coda = PTHREAD_COND_INITIALIZER;   /* condition variabl
 pthread_cond_t attesa_selezione = PTHREAD_COND_INITIALIZER; /* condition variable in cui gli utenti si bloccano in attesa che un corriere prenda in carico la loro ordinazione */
 pthread_cond_t attesa_arrivo = PTHREAD_COND_INITIALIZER;   /* condition variable in cui gli utenti si bloccano in attesa che il corriere gli comunichi che e' arrivato */
 
-int contatore_coda_prioritaria; /* variabile contatore che indica quanti utenti sono in coda per il loro ordine prioritario di 18 scatoloni */
 int *coda_prioritaria;  /* array contenente l'id dei threads UTENTI in coda per la presa in carico del loro ordine prioritario */
+int contatore_coda_prioritaria; /* variabile contatore che indica quanti utenti sono in coda per il loro ordine prioritario di 18 scatoloni */
 
-int contatore_coda_normale; /* variabile contatore che indica quanti utenti sono in coda per il loro ordine non prioritario */
 int *coda_normale;  /* array contenente l'id dei threads UTENTI in coda per la presa in carico del loro ordine non prioritario */
+int contatore_coda_normale; /* variabile contatore che indica quanti utenti sono in coda per il loro ordine non prioritario */
 
 int *utenti;    /* array di utenti che contiene l'id del thread CORRIERE che lo sta servendo, inizializzato a -1 (UTENTE_NON_SERVITO). Con -2 (UTENTE_SERVITO) indichiamo che la spedizione e' stata terminata */
 
@@ -205,7 +205,7 @@ void *eseguiCorriere(void *id)
 
     while (1)
     {
-        /* mi rendo disponibile per la presa in cario di una consegna */
+        /* mi rendo disponibile per la presa in cario di una spedizione */
         PARTI(*pi, &id_utente, &durata);
 
         /* simulo la durata del viaggio mediante una sleep */
