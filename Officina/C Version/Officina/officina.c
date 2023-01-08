@@ -1,38 +1,43 @@
+/* OBIETTIVO: generare un numero non noto di threads OPERAI e AUTO per la soluzione del problema dell'OFFICINA.
+ * I thread operai sono suddivisi in OPERAI di tipo 0 e OPERAI di tipo 1 mediante il vincolo che ogni tre operai, due devono essere di tipo 0 e uno di tipo 1.
+ * Gli operai di tipo 1 sono autorizzati a effettuare controlli per il bollino blu e i tagliandi, mentre gli operai di tipo 0 sono autorizzati soltanto a effettuare i tagliandi.
+ * Prima verranno creati i thread OPERAI e successivamente i thread AUTO.
+ * I thread OPERAI rimangono in attesa che un auto si presenti per effettuare uno dei due tipi di controlli a disposizione.
+ * Una volta che un AUTO entra in officina si inserisce nella coda corrispondente al controllo che deve effettuare, in attesa che un OPERAI la seleziona ed effettua il controllo.
+ * I controlli sono simulati mediante sleep di durata random, rispettando il vincolo che i controlli per il bollino blu hanno durata minore rispetto a quelli per il tagliando.
+ * Una volta terminato il controllo il thread AUTO ritorna la main il proprio numero d'ordine, mentre il thread OPERAIO si sospenderà in attesa dell'auto successiva */
+
 #include <pthread.h>
-#include <semaphore.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-#include <time.h>
 
 #define MAX_DURATA_OPERAZIONE 7
 #define AUTO_NON_SERVITA -1
 #define AUTO_SERVITA -2
-
-typedef enum {false, true} Boolean;
 
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;  /* semaforo binario per la mutua esclusione nell'accesso alle procedure entry del monitor */
 pthread_cond_t auto_in_coda = PTHREAD_COND_INITIALIZER; /* condition variable in cui gli operai si bloccano in attesa che un auto si metta in coda */
 pthread_cond_t attesa_controllo = PTHREAD_COND_INITIALIZER;   /* condition variable in cui le automobili si bloccano in attesa che un operaio prenda in carico la sua richiesta */
 pthread_cond_t attesa_termine = PTHREAD_COND_INITIALIZER;   /* condition variable in cui le automobili si bloccano in attesa che un operaio termini il controllo */
 
-int contatore_bollino_blu;  /* variabile contatore che indica quante auto sono in coda per il controllo per il bollino blu */
 int *coda_bollino_blu;  /* array contenente l'id dei threads AUTO in coda per il controllo per il bollino blu */
+int contatore_bollino_blu;  /* variabile contatore che indica quante auto sono in coda per il controllo per il bollino blu */
 
-int contatore_tagliando;    /* variabile contatore che indica quante auto sono in coda per il controllo per il tagliando */
 int *coda_tagliando;    /* array contenente l'id dei threads AUTO in coda per il controllo per il tagliando */
+int contatore_tagliando;    /* variabile contatore che indica quante auto sono in coda per il controllo per il tagliando */
 
 int *automobili;    /* array di automobili che contiene l'id del thread OPERAIO che la sta servendo, inizializzato a -1 (AUTO_NON_SERITA). Con -2 (AUTO_SERITA) indichiamo che l'operazione di controllo sull'auto e' stata effettuata */
 
 int NUM_THREADS_OPERAI; /* variabile contenente il numero totale di operai scelti per la risoluzione del problema */
 
-int NUM_AUTO_BOLLINO_BLU;
-int NUM_AUTO_TAGLIANDO;
+int NUM_AUTO_BOLLINO_BLU;   /* variabile che indica il numero di thread AUTO che devono effettuare un controllo per il bollino blu */
+int NUM_AUTO_TAGLIANDO; /* variabile che indica il numero di thread AUTO che devono effettuare un controllo per il tagliando */
 
 int mia_random(int MAX)
 {
-    int casuale;    /* variabilie che conterra' il numero casuale */
+    int casuale;    /* variabile che conterra' il numero casuale */
 
     casuale = rand() % MAX;
     casuale++;  /* incremento il risultato dato che la rand produce un numero random fra 0 e MAX-1, mentre a me serviva un numero fra 1 e MAX */
@@ -40,7 +45,7 @@ int mia_random(int MAX)
     return casuale;
 }
 
-void inizia_controllo(int id, int *durata, int tipo, int *id_auto)
+void INIZIA_CONTROLLO(int id, int *durata, int tipo, int *id_auto)
 {
     pthread_mutex_lock(&mutex); /* simulazione dell'ingresso nella procedure entry di un monitor */
 
@@ -119,7 +124,7 @@ void inizia_controllo(int id, int *durata, int tipo, int *id_auto)
     pthread_mutex_unlock(&mutex);   /* simulazione del termine di una procedure entry di un monitor */
 }
 
-void fine_controllo(int id, int tipo, int *id_auto)
+void FINE_CONTROLLO(int id, int tipo, int *id_auto)
 {
     pthread_mutex_lock(&mutex); /* simulazione dell'ingresso nella procedure entry di un monitor */
 
@@ -134,7 +139,7 @@ void fine_controllo(int id, int tipo, int *id_auto)
     pthread_mutex_unlock(&mutex);   /* simulazione del termine di una procedure entry di un monitor */
 }
 
-void auto_entra(int id, int tipo_operazione)
+void AUTO_ENTRA(int id, int tipo_operazione)
 {
     pthread_mutex_lock(&mutex); /* simulazione dell'ingresso nella procedure entry di un monitor */
 
@@ -228,7 +233,7 @@ void *eseguiAuto(void *id)
     /* effettuo la scelta del tipo di operazione da effettuare */
     tipo_operazione = generazione_random_tipo_operazione();
 
-    auto_entra(*pi, tipo_operazione);
+    AUTO_ENTRA(*pi, tipo_operazione);
 
     printf("AUTO-[Thread%d e identificatore %lu] controllo terminato, VADO A CASA\n", *pi, pthread_self());
 
@@ -256,12 +261,12 @@ void *eseguiOperaioTipo0(void *id)
 
     while(1)
     {
-        inizia_controllo(*pi, &durata, 0, &id_auto);
+        INIZIA_CONTROLLO(*pi, &durata, 0, &id_auto);
 
         /* effettuo il controllo */
         sleep(durata);
 
-        fine_controllo(*pi, 0, &id_auto);
+        FINE_CONTROLLO(*pi, 0, &id_auto);
     }
 
     /* NB: QUESTA PARTE DI CODICE NON VERRA' MAI ESEGUITA IN QUANTO GLI OPERAI SONO IN UN CICLO INFINITO */
@@ -292,12 +297,12 @@ void *eseguiOperaioTipo1(void *id)
 
     while(1)
     {
-        inizia_controllo(*pi, &durata, 1, &id_auto);
+        INIZIA_CONTROLLO(*pi, &durata, 1, &id_auto);
 
         /* effettuo il controllo */
         sleep(durata);
 
-        fine_controllo(*pi, 1, &id_auto);
+        FINE_CONTROLLO(*pi, 1, &id_auto);
     }
 
     /* NB: QUESTA PARTE DI CODICE NON VERRA' MAI ESEGUITA IN QUANTO GLI OPERAI SONO IN UN CICLO INFINITO */
@@ -398,6 +403,10 @@ int main(int argc, char **argv)
     printf("Numero Operai Tipo 0: %d\n", NUM_THREADS_OPERAI_TIPO_0);
     printf("Numero Operai Tipo 1: %d\n", NUM_THREADS_OPERAI - NUM_THREADS_OPERAI_TIPO_0);
 
+    /* Notifico possibilità di Starvation dei thread OPERAI di tipo 1 nel caso non siano presenti AUTO con controllo per il tagliando da effettuare */
+    if (NUM_AUTO_TAGLIANDO == 0)
+        printf("ATTENZIONE! Si verificherà un caso di Starvation dei %d thread OPERAI_TIPO_1 in quanto il numero di AUTO che vorra' effettuare un controllo per il tagliando e' pari a 0\n", NUM_THREADS_OPERAI - NUM_THREADS_OPERAI_TIPO_0);
+
     /* Inizializzo l'array di automobili */
     automobili = (int *) malloc(NUM_THREADS_AUTO * sizeof(int));
     for (i = 0; i < NUM_THREADS_AUTO; i++)
@@ -483,5 +492,5 @@ int main(int argc, char **argv)
     }
     printf("]\n");
 
-    exit(0);
+    exit(0);    /* quando il thread main termina, terminano anche gli operai */
 }
