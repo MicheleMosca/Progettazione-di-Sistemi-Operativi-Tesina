@@ -357,7 +357,7 @@ int main(int argc, char **argv)
     {
         sprintf(error, "Errore: Numero di thread AUTO_TAGLIANDO insufficienti per l'avvio del programma\n");
         perror(error);
-        exit(3);
+        exit(4);
     }
     printf("Numero AUTO_TAGLIANDO: %d\n", NUM_AUTO_TAGLIANDO);
 
@@ -370,7 +370,7 @@ int main(int argc, char **argv)
     {
         sprintf(error, "Errore: Numero di thread AUTO insufficienti per l'avvio del programma\n");
         perror(error);
-        exit(3);
+        exit(5);
     }
 
     /* Calcolo del numero di THREADS totali */
@@ -381,7 +381,7 @@ int main(int argc, char **argv)
     {
         sprintf(error, "Errore: Problemi con l'allocazione dell'array di thread\n");
         perror(error);
-        exit(3);
+        exit(6);
     }
 
     taskids = (int *) malloc(NUM_THREADS * sizeof(int));
@@ -389,7 +389,7 @@ int main(int argc, char **argv)
     {
         sprintf(error, "Errore: Problemi con l'allocazione dell'array di taskids\n");
         perror(error);
-        exit(4);
+        exit(7);
     }
 
     /* Definisco quanti THREADS OPERAI sono di tipo 0 e quanti di tipo 1 mediante il criterio: ogni 3 operai due sono di tipo 0 e uno di tipo 1 */
@@ -409,11 +409,23 @@ int main(int argc, char **argv)
 
     /* Inizializzo l'array di automobili */
     automobili = (int *) malloc(NUM_THREADS_AUTO * sizeof(int));
+    if (automobili == NULL)
+    {
+        sprintf(error, "Errore: Problemi con l'allocazione dell'array di automobili\n");
+        perror(error);
+        exit(8);
+    }
     for (i = 0; i < NUM_THREADS_AUTO; i++)
         automobili[i] = AUTO_NON_SERVITA;
 
     /* Inizializzo l'array della coda di auto per il bollino blu */
     coda_bollino_blu = (int *) malloc(NUM_THREADS_AUTO * sizeof(int));
+    if (coda_bollino_blu == NULL)
+    {
+        sprintf(error, "Errore: Problemi con l'allocazione dell'array della coda delle auto per il bollino blu\n");
+        perror(error);
+        exit(9);
+    }
     contatore_bollino_blu = 0;
     for (i = 0; i < NUM_THREADS_AUTO; i++)
     {
@@ -422,6 +434,12 @@ int main(int argc, char **argv)
 
     /* Inizializzo l'array della coda di auto per il tagliando */
     coda_tagliando = (int *) malloc(NUM_THREADS_AUTO * sizeof(int));
+    if (coda_tagliando == NULL)
+    {
+        sprintf(error, "Errore: Problemi con l'allocazione dell'array della coda delle auto per il tagliando\n");
+        perror(error);
+        exit(10);
+    }
     contatore_tagliando = 0;
     for (i = 0; i < NUM_THREADS_AUTO; i++)
     {
