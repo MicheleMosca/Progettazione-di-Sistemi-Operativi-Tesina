@@ -327,7 +327,7 @@ int main(int argc, char **argv)
     int NUM_THREADS_AUTO;
 
     /* Controllo sul numero di parametri */
-    if (argc != 4)  /* Soltanto due parametri devono essere passati; Il numero di OPERAI e il numero di AUTO */
+    if (argc != 4)  /* Soltanto tre parametri devono essere passati; Il numero di OPERAI e il numero di AUTO di tipo bollino blue e di tipo tagliando */
     {
         sprintf(error, "Errore: Numero dei parametri non corretto. Utilizzo: %s NUMERO_OPERAI NUMERO_AUTO_BOLLINO_BLU NUMERO_AUTO_TAGLIANDO \n", argv[0]);
         perror(error);
