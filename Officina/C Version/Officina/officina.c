@@ -455,7 +455,7 @@ int main(int argc, char **argv)
         {
             sprintf(error, "Errore: SONO IL MAIN E CI SONO STATI PROBLEMI NELLA CREAZIONE DEL thread OPERAIO_TIPO_0 %d-esimo\n", taskids[i]);
             perror(error);
-            exit(8);
+            exit(11);
         }
         printf("SONO IL MAIN e ho creato il Pthread OPERAIO_TIPO_0 %i-esimo con id=%lu\n", i, thread[i]);
     }
@@ -469,7 +469,7 @@ int main(int argc, char **argv)
         {
             sprintf(error, "Errore: SONO IL MAIN E CI SONO STATI PROBLEMI NELLA CREAZIONE DEL thread OPERAIO_TIPO_1 %d-esimo\n", taskids[i]);
             perror(error);
-            exit(8);
+            exit(12);
         }
         printf("SONO IL MAIN e ho creato il Pthread OPERAIO_TIPO_1 %i-esimo con id=%lu\n", i, thread[i]);
     }
@@ -486,7 +486,7 @@ int main(int argc, char **argv)
         {
             sprintf(error, "Errore: SONO IL MAIN E CI SONO STATI PROBLEMI NELLA CREAZIONE DEL thread AUTO %d-esimo\n", taskids[i]);
             perror(error);
-            exit(9);
+            exit(13);
         }
         printf("SONO IL MAIN e ho creato il Pthread AUTO %i-esimo con id=%lu\n", i, thread[i]);
     }
