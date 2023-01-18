@@ -17,6 +17,8 @@ typedef struct definizione_gruppo gruppo;
 #define PASSEGGERO_SERVITO -2
 
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;  /* semaforo binario per la mutua esclusione nell'accesso alle procedure entry del monitor */
+pthread_cond_t attesa_imbarco = PTHREAD_COND_INITIALIZER; /* condition variable in cui i passeggeri singoli/in gruppo si bloccano in attesa che il pilota li faccia salire sull'elicottero */
+pthread_cond_t attesa_termine = PTHREAD_COND_INITIALIZER; /* condition variable in cui i passeggeri singoli/in gruppo si bloccano in attesa che il volo termini */
 
 int *coda_passeggeri_singoli;   /* array contenente l'id dei thread PASSEGGERI_SINGOLI in coda per salire sull'elicottero */
 int contatore_passeggeri_singoli;   /* variabile contatore che indica quanti passeggeri singoli sono in coda per salire sull'elicottero */
@@ -39,6 +41,62 @@ int mia_random(int MAX)
     casuale++;  /* incremento il risultato dato che la rand produce un numero random fra 0 e MAX-1, mentre a me serviva un numero fra 1 e MAX */
 
     return casuale;
+}
+
+void PRENOTA(int id, int num_persone)
+{
+    pthread_mutex_lock(&mutex); /* simulazione dell'ingresso nella procedure entry di un monitor */
+
+    /* mi inserisco nella coda in base al numero di posti che sto prenotando */
+    if (num_persone == 1)   /* prenoto per un passeggero singolo */
+    {
+        printf("PASSEGGERO_SINGOLO-[Thread%d e identificatore %lu] mi inserisco nella coda dei passeggeri singoli \n", id, pthread_self());
+
+        /* inserisco il mio id nella coda dei passeggeri singoli e incremento il numero di persone singole in attesa */
+        coda_passeggeri_singoli[contatore_passeggeri_singoli] = id;
+        contatore_passeggeri_singoli++;
+    }
+    else    /* prenoto per un gruppo di passeggeri */
+    {
+        printf("PASSEGGERI_GRUPPO-[Thread%d e identificatore %lu] siamo un gruppo di passeggeri di %d persone, ci inseriamo nella coda dei passeggeri in gruppo \n", id, pthread_self(), num_persone);
+
+        /* inserisco il mio id nella coda dei passeggeri in gruppo e incremento il numero di passeggeri in gruppo in attesa */
+        coda_passeggeri_gruppo[contatore_passeggeri_gruppo].id = id;
+        coda_passeggeri_gruppo[contatore_passeggeri_gruppo].num_persone = num_persone;
+        contatore_passeggeri_gruppo++;
+    }
+
+    while (passeggeri[id - 1] == PASSEGGERO_NON_SERVITO)
+    {
+        /* mi metto in attesa che il pilota mi/ci faccia salire sull'elicottero */
+        pthread_cond_wait(&attesa_imbarco, &mutex);
+    }
+
+    printf("AUTO-[Thread%d e identificatore %lu] il pilota con id %d mi/ci ha fatto salire sull'elicottero\n", id, pthread_self(), passeggeri[id - 1]);
+
+    while(passeggeri[id - -1] == PASSEGGERO_SERVITO)
+    {
+        /* l'elicottero e' appena partito, attendo il termine del volo */
+        pthread_cond_wait(&attesa_termine, &mutex);
+    }
+
+    pthread_mutex_unlock(&mutex);   /* simulazione del termine di una procedure entry di un monitor */
+}
+
+void IMBARCO(int id)
+{
+    pthread_mutex_lock(&mutex); /* simulazione dell'ingresso nella procedure entry di un monitor */
+
+
+
+    pthread_mutex_unlock(&mutex);   /* simulazione del termine di una procedure entry di un monitor */
+}
+
+void VOLO_TERMINATO(int id)
+{
+    pthread_mutex_lock(&mutex); /* simulazione dell'ingresso nella procedure entry di un monitor */
+
+    pthread_mutex_unlock(&mutex);   /* simulazione del termine di una procedure entry di un monitor */
 }
 
 int generazione_random_tipo_di_passeggeri()
@@ -90,7 +148,8 @@ void *eseguiPasseggeroSingolo(void *id)
 
     printf("PASSEGGERO_SINGOLO-[Thread%d e identificatore %lu] STO ARRIVANDO\n", *pi, pthread_self());
 
-    /*  */
+    /* effettuo la prenotazione per un passeggero singolo */
+    PRENOTA(*pi, 1);
 
     printf("PASSEGGERO_SINGOLO-[Thread%d e identificatore %lu] volo terminato, VADO A CASA\n", *pi, pthread_self());
 
@@ -104,6 +163,7 @@ void *eseguiPasseggeriGruppo(void *id)
 {
     int *pi = (int *) id;
     int *ptr;
+    int num_persone;    /* variabile che contiene il numero di persone che compone il gruppo, generato in modo random */
 
     ptr = (int *) malloc(sizeof(int));
     if (ptr == NULL)
@@ -114,7 +174,15 @@ void *eseguiPasseggeriGruppo(void *id)
 
     printf("PASSEGGERI_GRUPPO-[Thread%d e identificatore %lu] STIAMO ARRIVANDO\n", *pi, pthread_self());
 
-    /*  */
+    /* calcolo in modo random il numero di persone che compongono il gruppo */
+    num_persone = mia_random(NUM_POSTI);
+
+    /* mi assicuro che il numero di persone che compongono il gruppo non sia di una sola persona */
+    if (num_persone == 1)
+        num_persone++;
+
+    /* effettuo la prenotazione per un gruppo di passeggeri */
+    PRENOTA(*pi, num_persone);
 
     printf("PASSEGGERI_GRUPPO-[Thread%d e identificatore %lu] volo terminato, ANDIAMO A CASA\n", *pi, pthread_self());
 
@@ -128,6 +196,7 @@ void *eseguiPilota(void *id)
 {
     int *pi = (int *) id;
     int *ptr;
+    int voli_eseguiti;  /* variabile contatore che serve a memorizzare il numero di voli che il pilota ha effettuato */
 
     ptr = (int *) malloc(sizeof(int));
     if (ptr == NULL)
@@ -138,7 +207,21 @@ void *eseguiPilota(void *id)
 
     printf("PILOTA-[Thread%d e identificatore %lu] STO ARRIVANDO\n", *pi, pthread_self());
 
-    /*  */
+    /* eseguo i voli di questa giornata */
+    for (voli_eseguiti = 0; voli_eseguiti < NUM_VOLI; voli_eseguiti++)
+    {
+        /* attendo che arrivi l'ora di partenza, mediante una sleep di 2 secondi */
+        sleep(2);
+
+        /* faccio salire i passeggeri sull'elicottero */
+        IMBARCO(*pi);
+
+        /* simulo il volo mediante una sleep di 4 secondi */
+        sleep(4);
+
+        /* termino il volo e faccio scendere i passeggeri */
+        VOLO_TERMINATO(*pi);
+    }
 
     printf("PILOTA-[Thread%d e identificatore %lu] voli terminati, VADO A CASA\n", *pi, pthread_self());
 
