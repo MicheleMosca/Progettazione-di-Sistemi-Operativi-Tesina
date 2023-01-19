@@ -54,7 +54,7 @@ class Elicottero extends Monitor
         entraMonitor();
 
         // Mi sospendo se:
-        // - l'elicottero  in volo (o sta imbarcando)
+        // - l'elicottero è in volo (o sta imbarcando)
         // - sono un singolo e ci sono gruppi in coda
         // - i posti sono finiti
         while((this.in_volo) || ((this.occupati + posti) > N)) // || (tipo == 0 && this.coda_attesa[1].queue()))
@@ -76,7 +76,7 @@ class Elicottero extends Monitor
         System.out.println(nome + " sono atterrato, scendo");
         this.in_elicottero--;
 
-        // Non risveglio io in pilota perch questo parte comunque una volta passato l'orario
+        // Non risveglio io in pilota perché questo parte comunque una volta passato l'orario
 
         esciMonitor();
     }
