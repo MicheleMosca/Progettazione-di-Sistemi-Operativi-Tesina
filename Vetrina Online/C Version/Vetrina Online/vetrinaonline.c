@@ -76,7 +76,7 @@ void ORDINA(int id, int scatoloni)
     /* sveglio i corrieri in attesa, per poter essere servito */
     pthread_cond_broadcast(&utenti_in_coda);
 
-    while(utenti[id - NUM_THREADS_CORRIERI] == UTENTE_NON_SERVITO)  /* verifico la condizione con un while cosi' da accertarmi che la condizione sia ancora soddisfatta dopo il rilascio da parte della wait */
+    while(utenti[id - NUM_THREADS_CORRIERI] == UTENTE_NON_SERVITO)  /* e' necessario per il corretto funzionamento di questa soluzione, utilizzare un while per verificare nuovamente la condizione */
     {
         /* mi sospendo in attesa che un corriere selezioni il mio ordine */
         pthread_cond_wait(&attesa_selezione, &mutex);
@@ -84,7 +84,7 @@ void ORDINA(int id, int scatoloni)
 
     printf("UTENTE-[Thread%d e identificatore %lu] il corriere con id %d ha appena preso in carico il mio ordine\n", id, pthread_self(), utenti[id - NUM_THREADS_CORRIERI]);
 
-    while (utenti[id - NUM_THREADS_CORRIERI] != UTENTE_SERVITO) /* verifico la condizione con un while cosi' da accertarmi che la condizione sia ancora soddisfatta dopo il rilascio da parte della wait */
+    while (utenti[id - NUM_THREADS_CORRIERI] != UTENTE_SERVITO) /* e' necessario per il corretto funzionamento di questa soluzione, utilizzare un while per verificare nuovamente la condizione */
     {
         /* il corriere e' appena partito, mi sospendo in attesa del suo arrivo */
         pthread_cond_wait(&attesa_arrivo, &mutex);
@@ -115,7 +115,7 @@ void PARTI(int id, int *id_utente, int *durata)
     pthread_mutex_lock(&mutex); /* simulazione dell'ingresso nella procedure entry di un monitor */
 
     /* attendo che un utente effettui un ordine */
-    while (contatore_coda_prioritaria == 0 && contatore_coda_normale == 0)  /* verifico la condizione con un while cosi' da accertarmi che la condizione sia ancora soddisfatta dopo il rilascio da parte della wait */
+    while (contatore_coda_prioritaria == 0 && contatore_coda_normale == 0)  /* e' necessario per il corretto funzionamento di questa soluzione, utilizzare un while per verificare nuovamente la condizione */
     {
         printf("CORRIERE-[Thread%d e identificatore %lu] non ci sono utenti in coda, mi sospendo\n", id, pthread_self());
         pthread_cond_wait(&utenti_in_coda, &mutex); /* mi sospendo in attesa che un utente si metta in una delle code */
