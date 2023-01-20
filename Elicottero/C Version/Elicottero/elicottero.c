@@ -155,7 +155,7 @@ void IMBARCO(int id, int *num_posti_disponibili, int **id_selezionati, int *cont
         /* faccio salire il passeggero singolo in elicottero, inserendo nel suo stato il mio id pilota e inserendo il suo id nell'array id_selezionati */
         passeggeri[coda_passeggeri_singoli[0] - 1] = id;
         (*id_selezionati)[*contatore_selezionati] = coda_passeggeri_singoli[0];
-        printf("PILOTA-[Thread%d e identificatore %lu] faccio salire il passeggero singolo con id %d. Posti ancora disponibili: %d\n", id, pthread_self(), coda_passeggeri_singoli[0], *num_posti_disponibili);
+        printf("PILOTA-[Thread%d e identificatore %lu] faccio salire il passeggero singolo con id %d. Posti ancora disponibili: %d\n", id, pthread_self(), coda_passeggeri_singoli[0], *num_posti_disponibili - 1);
 
         /* aumento di uno il numero dei passeggeri/gruppi di passeggeri selezionati per salire sull'elicottero */
         (*contatore_selezionati)++;
