@@ -114,7 +114,7 @@ void IMBARCO(int id, int *num_posti_disponibili, int **id_selezionati, int *cont
 
     int i;  /* variabile contatore usata per la selezione del gruppo di passeggeri */
     int j;  /* variabile contatore usata per spostare i passeggeri singoli/in gruppo all'interno della coda */
-    Boolean trovato;    /* variabile booleana che indica se e' stato trovato un gruppo di passeggeri che può riempire i posti disponibili in elicottero */
+    Boolean trovato;    /* variabile booleana che indica se e' stato trovato un gruppo di passeggeri che puo' riempire i posti disponibili in elicottero */
 
     /* controllo se ci sono gruppi di passeggeri in attesa */
     if (contatore_passeggeri_gruppo > 0)
@@ -366,7 +366,7 @@ void *eseguiPilota(void *id)
     /* eseguo i voli di questa giornata */
     for (voli_eseguiti = 0; voli_eseguiti < NUM_VOLI; voli_eseguiti++)
     {
-        /* attendo che arrivi l'ora di partenza, mediante una sleep di 2 secondi */
+        /* attendo che arrivi l'ora per la partenza, mediante una sleep di 2 secondi */
         sleep(2);
 
         /* faccio salire i passeggeri sull'elicottero */
