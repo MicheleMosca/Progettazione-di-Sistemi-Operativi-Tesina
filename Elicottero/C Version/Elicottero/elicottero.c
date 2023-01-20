@@ -46,7 +46,7 @@ int NUM_POSTI;  /* variabile che indica il numero di posti che l'elicottero cont
 int NUM_THREADS_PASSEGGERI_SINGOLI; /* variabile che indica il numero di thread passeggeri singoli che deve essere generato */
 int NUM_THREADS_PASSEGGERI_GRUPPO;  /* variabile che indica il numero di thread passeggeri in gruppo che deve essere generato */
 
-int voli_eseguiti;  /* variabile contatore che serve a memorizzare il numero di voli che il pilota ha effettuato */
+int voli_eseguiti;  /* variabile contatore che serve a memorizzare il numero di voli che il pilota ha effettuato nella giornata odierna */
 
 int mia_random(int MAX)
 {
@@ -250,7 +250,7 @@ int generazione_random_tipo_di_passeggeri()
     }
     else
     {
-        /* sono rimasti solo passeggeri in grupo da generare, diminuisco il numero di uno */
+        /* sono rimasti solo passeggeri in gruppo da generare, diminuisco il numero di uno */
         NUM_THREADS_PASSEGGERI_GRUPPO--;
         return 1;
     }
@@ -589,5 +589,5 @@ int main(int argc, char **argv)
     }
     printf("]\n");
 
-    exit(0);    /* quando il thread main termina, terminano anche gli operai */
+    exit(0);
 }
