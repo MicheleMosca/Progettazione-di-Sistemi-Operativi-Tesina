@@ -52,7 +52,7 @@ void INIZIA_CONTROLLO(int id, int *durata, int tipo, int *id_auto)
     if (tipo == 0)
     {
         /* attendo che ci sia un auto in coda */
-        while (contatore_bollino_blu == 0 && contatore_tagliando == 0)
+        while (contatore_bollino_blu == 0 && contatore_tagliando == 0)  /* e' necessario per il corretto funzionamento di questa soluzione, utilizzare un while per verificare nuovamente la condizione */
         {
             printf("OPERAIO_TIPO_%d-[Thread%d e identificatore %lu] nessun auto e' in coda, mi sospendo\n", tipo, id, pthread_self());
             pthread_cond_wait(&auto_in_coda, &mutex);
@@ -97,7 +97,7 @@ void INIZIA_CONTROLLO(int id, int *durata, int tipo, int *id_auto)
     else
     {
         /* attendo che ci sia un auto in coda */
-        while (contatore_tagliando == 0)
+        while (contatore_tagliando == 0)    /* e' necessario per il corretto funzionamento di questa soluzione, utilizzare un while per verificare nuovamente la condizione */
         {
             printf("OPERAIO_TIPO_%d-[Thread%d e identificatore %lu] nessun auto e' in coda, mi sospendo\n", tipo, id, pthread_self());
             pthread_cond_wait(&auto_in_coda, &mutex);
@@ -163,7 +163,7 @@ void AUTO_ENTRA(int id, int tipo_operazione)
     /* sveglio gli operai in attesa per poter essere servito */
     pthread_cond_broadcast(&auto_in_coda);
 
-    while(automobili[id - NUM_THREADS_OPERAI] == AUTO_NON_SERVITA)
+    while(automobili[id - NUM_THREADS_OPERAI] == AUTO_NON_SERVITA)  /* e' necessario per il corretto funzionamento di questa soluzione, utilizzare un while per verificare nuovamente la condizione */
     {
         /* mi metto in attesa che un operaio effettui il controllo */
         pthread_cond_wait(&attesa_controllo, &mutex);
@@ -171,7 +171,7 @@ void AUTO_ENTRA(int id, int tipo_operazione)
 
     printf("AUTO-[Thread%d e identificatore %lu] l'operario con id %d ha appena preso in carico il mio controllo\n", id, pthread_self(), automobili[id - NUM_THREADS_OPERAI]);
 
-    while (automobili[id - NUM_THREADS_OPERAI] != AUTO_SERVITA)
+    while (automobili[id - NUM_THREADS_OPERAI] != AUTO_SERVITA) /* e' necessario per il corretto funzionamento di questa soluzione, utilizzare un while per verificare nuovamente la condizione */
     {
         /* il controllo dell'auto e' appena iniziato, attendo il termine */
         pthread_cond_wait(&attesa_termine, &mutex);

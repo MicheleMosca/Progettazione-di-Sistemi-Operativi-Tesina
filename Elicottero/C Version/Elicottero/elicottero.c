@@ -1,4 +1,16 @@
-/* OBIETTIVO:  */
+/* OBIETTIVO: generare un thread PILOTA e un numero non noto di threads PASSEGGERI_SINGOLI e PASSEGGERI_GRUPPO per la soluzione del problema dell'Elicottero.
+ * Verranno eseguiti solamente V voli nella giornata odierna, il cui numero verra' fornito in input.
+ * Il numero di posti N di cui e' composto l'elicottero, dedicato ai passeggeri, e' dato in input.
+ * Il numero di persone di cui sono composti i gruppi di passeggeri e' generato in modo random e va da un gruppo di minimo 2 persone fino ad un massimo di N persone, dove N e' il numero di posti di cui e' composto l'elicottero.
+ * I gruppi di passeggeri hanno priorita' rispetto ai passeggeri singoli, pertanto saliranno per prima e soltanto se rimarranno dei posti liberi, questi verranno occupati dai passeggeri singoli.
+ * Il thread PILOTA verra' creato per primo. Il quale attendera' che arrivi l'ora prestabilita per partire, chiudendo cosi' l'imbarco con la salita dei passeggeri scelti per quel volo e partira'.
+ * Al termine del volo, il thread PILOTA, fara' scendere i passeggeri, liberando cosi' i posti sull'elicottero e attendera' nuovamente che arrivi l'ora per il volo successivo. Iterando questo ciclo fino al termine dei V voli disponibili per la giornata odierna.
+ * Il thread PILOTA potrà effettuare il volo anche in assenza di passeggeri.
+ * I threads PASSEGGERO_SINGOLO e PASSEGGERI_GRUPPO, dopo la loro creazione, si inseriranno nella loro rispettiva coda, in attesa che il pilota li selezioni per farli salire sull'elicottero.
+ * Una volta che il thread PILOTA fa salire uno dei thread PASSEGGERO_SINGOLO o PASSEGGERO_GRUPPO, quest'ultimo scrivera' su standard output di essere appena salito sull'elicottero ed attendera' il termine del volo.
+ * Al termine del volo i threads PASSEGGERO_SINGOLO e PASSEGGERI_GRUPPO scenderanno dall'elicottero e torneranno a casa.
+ * Nel caso in cui il numero V dei voli, che verranno svolti nella giornata odierna, non e' sufficiente a far effettuare il volo turistico a tutti i passeggeri che si presentano, il thread PILOTA al termine dell'ultimo volo notifichera' l'accaduto ai threads PASSEGGERO_SINGOLO e PASSEGGERI_GRUPPO facendoli tornare a casa.
+ * */
 
 #include <pthread.h>
 #include <stdio.h>
@@ -69,7 +81,7 @@ void PRENOTA(int id, int num_persone, Boolean *voli_finiti)
         contatore_passeggeri_gruppo++;
     }
 
-    while (passeggeri[id - 1] == PASSEGGERO_NON_SERVITO)
+    while (passeggeri[id - 1] == PASSEGGERO_NON_SERVITO)    /* e' necessario per il corretto funzionamento di questa soluzione, utilizzare un while per verificare nuovamente la condizione */
     {
         if (voli_eseguiti == NUM_VOLI)  /* se i voli sono terminati torno a casa */
         {
@@ -87,7 +99,7 @@ void PRENOTA(int id, int num_persone, Boolean *voli_finiti)
     else
         printf("PASSEGGERI_GRUPPO-[Thread%d e identificatore %lu] il pilota con id %d ci ha fatto salire sull'elicottero\n", id, pthread_self(), passeggeri[id - 1]);
 
-    while(passeggeri[id - 1] != PASSEGGERO_SERVITO)
+    while(passeggeri[id - 1] != PASSEGGERO_SERVITO) /* e' necessario per il corretto funzionamento di questa soluzione, utilizzare un while per verificare nuovamente la condizione */
     {
         /* l'elicottero e' appena partito, attendo il termine del volo */
         pthread_cond_wait(&attesa_termine, &mutex);
@@ -101,7 +113,7 @@ void IMBARCO(int id, int *num_posti_disponibili, int **id_selezionati, int *cont
     pthread_mutex_lock(&mutex); /* simulazione dell'ingresso nella procedure entry di un monitor */
 
     int i;  /* variabile contatore usata per la selezione del gruppo di passeggeri */
-    int j;  /* variabile contatore usata per spostare i passeggeri in gruppo/singoli nella coda */
+    int j;  /* variabile contatore usata per spostare i passeggeri singoli/in gruppo all'interno della coda */
     Boolean trovato;    /* variabile booleana che indica se e' stato trovato un gruppo di passeggeri che può riempire i posti disponibili in elicottero */
 
     /* controllo se ci sono gruppi di passeggeri in attesa */
@@ -188,7 +200,7 @@ void VOLO_TERMINATO(int id, int *num_posti_disponibili, int **id_selezionati, in
 
     printf("PILOTA-[Thread%d e identificatore %lu] volo %d-esimo terminato, faccio scendere i passeggeri\n", id, pthread_self(), voli_eseguiti);
 
-    while (*contatore_selezionati > 0)
+    while (*contatore_selezionati > 0)  /* faccio scendere tutti i passeggeri */
     {
         /* imposto lo stato dei passeggeri in PASSEGGERO_SERVITO (-2) per indicare che il loro volo e' terminato */
         passeggeri[(*id_selezionati)[*contatore_selezionati -1] - 1] = PASSEGGERO_SERVITO;
