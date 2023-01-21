@@ -369,7 +369,7 @@ int main(int argc, char **argv)
         perror(error);
         exit(2);
     }
-    printf("Numero totale BANCARI: %d\n", NUM_THREADS_BANCARI);
+    printf("Numero totale di BANCARI: %d\n", NUM_THREADS_BANCARI);
 
     MAX_CLIENTI_CONTEMPORANEAMENTE = atoi(argv[2]);
     if (MAX_CLIENTI_CONTEMPORANEAMENTE < 2 * NUM_THREADS_BANCARI)   /* Controllo che il numero MAX_CLIENTI_CONTEMPORANEAMENTE sia molto maggiore del numero dei thread BANCARI. Imponendo che per molto maggiore si intende almeno il doppio */

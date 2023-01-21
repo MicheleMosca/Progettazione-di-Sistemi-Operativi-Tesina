@@ -95,14 +95,14 @@ void ORDINA(int id, int scatoloni)
     pthread_mutex_unlock(&mutex);   /* simulazione del termine di una procedure entry di un monitor */
 }
 
-void CONSEGNA(int id, int *id_utente, int *durata)
+void CONSEGNA(int id, int id_utente, int durata)
 {
     pthread_mutex_lock(&mutex); /* simulazione dell'ingresso nella procedure entry di un monitor */
 
-    printf("CORRIERE-[Thread%d e identificatore %lu] ho consegnato l'ordine dell'utente %d, sto rientrando (durata rientro: %d secondi)\n", id, pthread_self(), *id_utente, *durata);
+    printf("CORRIERE-[Thread%d e identificatore %lu] ho consegnato l'ordine dell'utente %d, sto rientrando (durata rientro: %d secondi)\n", id, pthread_self(), id_utente, durata);
 
     /* modifico lo stato dell'utente in: UTENTE_SERVITO (-2) */
-    utenti[*id_utente - NUM_THREADS_CORRIERI] = UTENTE_SERVITO;
+    utenti[id_utente - NUM_THREADS_CORRIERI] = UTENTE_SERVITO;
 
     /* notifico l'utente della consegna dell'ordine */
     pthread_cond_broadcast(&attesa_arrivo);
@@ -113,6 +113,8 @@ void CONSEGNA(int id, int *id_utente, int *durata)
 void PARTI(int id, int *id_utente, int *durata)
 {
     pthread_mutex_lock(&mutex); /* simulazione dell'ingresso nella procedure entry di un monitor */
+
+    int i;  /* variabile contatore utilizzata per scorrere le code */
 
     /* attendo che un utente effettui un ordine */
     while (contatore_coda_prioritaria == 0 && contatore_coda_normale == 0)  /* e' necessario per il corretto funzionamento di questa soluzione, utilizzare un while per verificare nuovamente la condizione */
@@ -125,11 +127,14 @@ void PARTI(int id, int *id_utente, int *durata)
     {
         printf("CORRIERE-[Thread%d e identificatore %lu] un utente e' in coda PRIORITARIA, lo rimuovo dalla coda\n", id, pthread_self());
 
-        /* prendo in carico l'ordine dell'ultimo utente che c'e' in coda */
-        *id_utente = coda_prioritaria[contatore_coda_prioritaria - 1];
+        /* prendo in carico l'ordine del primo utente che c'e' in coda */
+        *id_utente = coda_prioritaria[0];
         utenti[*id_utente - NUM_THREADS_CORRIERI] = id;
 
         /* rimuovo dalla coda l'utente */
+        for (i = 0; i < contatore_coda_prioritaria - 1; i++)
+            coda_prioritaria[i] = coda_prioritaria[i+1];
+
         coda_prioritaria[contatore_coda_prioritaria -1] = -1;
         contatore_coda_prioritaria--;
     }
@@ -137,11 +142,14 @@ void PARTI(int id, int *id_utente, int *durata)
     {
         printf("CORRIERE-[Thread%d e identificatore %lu] un utente e' in coda NORMALE, lo rimuovo dalla coda\n", id, pthread_self());
 
-        /* prendo in carico l'ordine dell'ultimo utente che c'e' in coda */
-        *id_utente = coda_normale[contatore_coda_normale - 1];
+        /* prendo in carico l'ordine del primo utente che c'e' in coda */
+        *id_utente = coda_normale[0];
         utenti[*id_utente - NUM_THREADS_CORRIERI] = id;
 
         /* rimuovo dalla coda l'utente */
+        for(i = 0; i < contatore_coda_normale - 1; i++)
+            coda_normale[i] = coda_normale[i+1];
+
         coda_normale[contatore_coda_normale -1] = -1;
         contatore_coda_normale--;
     }
@@ -212,7 +220,7 @@ void *eseguiCorriere(void *id)
         sleep(durata);
 
         /* effettuo la consegna dell'ordine al cliente */
-        CONSEGNA(*pi, &id_utente, &durata);
+        CONSEGNA(*pi, id_utente, durata);
 
         /* simulo la durata del viaggio di ritorno in negozio mediante una sleep */
         sleep(durata);
@@ -253,6 +261,7 @@ int main(int argc, char **argv)
         perror(error);
         exit(2);
     }
+    printf("Numero totale di CORRIERI: %d\n", NUM_THREADS_CORRIERI);
 
     NUM_THREADS_UTENTI = atoi(argv[2]);
     if (NUM_THREADS_UTENTI <= 0)   /* Controllo che il numero di thread UTENTI da creare sia maggiore di zero */
@@ -261,6 +270,7 @@ int main(int argc, char **argv)
         perror(error);
         exit(3);
     }
+    printf("Numero totale di UTENTI: %d\n", NUM_THREADS_UTENTI);
 
     NUM_THREADS = NUM_THREADS_CORRIERI + NUM_THREADS_UTENTI;
 
