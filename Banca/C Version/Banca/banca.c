@@ -24,8 +24,7 @@ int contatore_clienti_normali;  /* variabile contatore che indica quanti clienti
 int *coda_clienti_vip;    /* array contenente l'id dei threads CLIENTE_VIP in coda per l'apertura della propria cassetta di sicurezza */
 int contatore_clienti_vip;    /* variabile contatore che indica quanti clienti VIP sono in coda per l'apertura della propria cassetta di sicurezza */
 
-int *clienti_area_risevata; /* array contenente l'id dei threads CLIENTI che attualmente sono all'interno dell'area riservata */
-int contatore_clienti_area_riservata;   /* variabile contatore che indica quanti clienti sono attualmente all'interno dell'area riservata */
+int numero_clienti_area_riservata;   /* variabile contatore che indica quanti clienti sono attualmente all'interno dell'area riservata */
 
 int *clienti;    /* array di clienti che contiene l'id del thread BANCARIO che lo sta servendo, inizializzato a -1 (CLIENTE_NON_SERVITO). Con -2 (CLIENTE_SERVITO) indichiamo che il bancario ha aperto la cassetta di sicurezza del cliente */
 
@@ -48,34 +47,143 @@ void ENTRA_BANCA(int id, int tipo_cliente)
 {
     pthread_mutex_lock(&mutex); /* simulazione dell'ingresso nella procedure entry di un monitor */
 
+    if (tipo_cliente == CLIENTE_VIP)
+    {
+        printf("CLIENTE_VIP-[Thread%d e identificatore %lu] sono appena entrato all'interno della banca, mi metto nella coda dei clienti VIP\n", id, pthread_self());
 
+        /* mi metto nella coda dei clienti VIP */
+        coda_clienti_vip[contatore_clienti_vip] = id;
+        contatore_clienti_vip++;
+    }
+    else
+    {
+        printf("CLIENTE_NORMALE-[Thread%d e identificatore %lu] sono appena entrato all'interno della banca, mi metto nella coda dei clienti normali\n", id, pthread_self());
+
+        /* mi metto nella coda dei clienti normali */
+        coda_clienti_normali[contatore_clienti_normali] = id;
+        contatore_clienti_normali++;
+    }
+
+    /* sveglio i bancari in attesa per poter essere servito */
+    pthread_cond_broadcast(&clienti_in_coda);
+
+    while(clienti[id - NUM_THREADS_BANCARI] == CLIENTE_NON_SERVITO)
+    {
+        /* mi metto in attesa che un bancario mi faccia accedere all'area riservata per potermi aprire la cassetta di sicurezza */
+        pthread_cond_wait(&attesa_ingresso, &mutex);
+    }
+
+    /* aumento di uno il numero di utenti all'interno dell'area riservata */
+    numero_clienti_area_riservata++;
+
+    if (tipo_cliente == CLIENTE_VIP)
+        printf("CLIENTE_VIP-[Thread%d e identificatore %lu] il bancario con id %d mi ha appena accompagnato nell'area riservata, attendo che apra la cassetta di sicurezza (clienti all'interno dell'area riservata: %d)\n", id, pthread_self(), clienti[id - NUM_THREADS_BANCARI], numero_clienti_area_riservata);
+    else
+        printf("CLIENTE_NORMALE-[Thread%d e identificatore %lu] il bancario con id %d mi ha appena accompagnato nell'area riservata, attendo che apra la cassetta di sicurezza (clienti all'interno dell'area riservata: %d)\n", id, pthread_self(), clienti[id - NUM_THREADS_BANCARI], numero_clienti_area_riservata);
+
+    while(clienti[id - NUM_THREADS_BANCARI] != CLIENTE_SERVITO)
+    {
+        /* mi metto in attesa che il bancario termini l'apertura della cassetta di sicurezza */
+        pthread_cond_wait(&attesa_apertura, &mutex);
+    }
 
     pthread_mutex_unlock(&mutex);   /* simulazione del termine di una procedure entry di un monitor */
 }
 
-void ESCI_BANCA(int id)
+void ESCI_BANCA(int id, int tipo_cliente)
 {
     pthread_mutex_lock(&mutex); /* simulazione dell'ingresso nella procedure entry di un monitor */
 
+    if (tipo_cliente == CLIENTE_VIP)
+        printf("CLIENTE_VIP-[Thread%d e identificatore %lu] ho appena terminato di visionare la cassetta di sicurezza, ESCO dall'area riservata (clienti all'interno dell'area riservata: %d)\n", id, pthread_self(), numero_clienti_area_riservata - 1);
+    else
+        printf("CLIENTE_NORMALE-[Thread%d e identificatore %lu] ho appena terminato di visionare la cassetta di sicurezza, ESCO dall'area riservata (clienti all'interno dell'area riservata: %d)\n", id, pthread_self(), numero_clienti_area_riservata - 1);
 
+    /* diminuisco di uno il numero di clienti presenti all'interno dell'area riservata */
+    numero_clienti_area_riservata--;
+
+    /* notifico ai threads bancari che sono appena uscito dall'area riservata, pertanto un altro cliente puo' entrare */
+    pthread_cond_broadcast(&clienti_in_coda);
 
     pthread_mutex_unlock(&mutex);   /* simulazione del termine di una procedure entry di un monitor */
 }
 
-void INIZIO_LAVORO(int id)
+void INIZIO_LAVORO(int id, int *id_cliente, int *durata)
 {
     pthread_mutex_lock(&mutex); /* simulazione dell'ingresso nella procedure entry di un monitor */
 
+    int i;  /* variabile contatore utilizzata per scorrere le code dei clienti */
 
+    /* attendo che ci sia un cliente in coda e che non siano esauriti i posti all'interno dell'area riservata */
+    while((contatore_clienti_vip == 0 && contatore_clienti_normali == 0) || numero_clienti_area_riservata >= MAX_CLIENTI_CONTEMPORANEAMENTE)
+    {
+        if (contatore_clienti_vip == 0 && contatore_clienti_normali == 0)
+            printf("BANCARIO-[Thread%d e identificatore %lu] nessun cliente e' in coda, mi sospendo\n", id, pthread_self());
+        else
+            printf("BANCARIO-[Thread%d e identificatore %lu] ci sono dei clienti in coda ma il numero di persone all'interno dell'area riservato ha raggiunto il numero massimo, mi sospendo\n", id, pthread_self());
+
+        pthread_cond_wait(&clienti_in_coda, &mutex);
+    }
+
+    /* se ci sono clienti VIP in coda do la precedenza a loro */
+    if (contatore_clienti_vip > 0)
+    {
+        printf("BANCARIO-[Thread%d e identificatore %lu] cliente VIP in coda, lo rimuovo dalla coda\n", id, pthread_self());
+
+        /* seleziono il primo cliente VIP che e' entrato nella coda */
+        *id_cliente = coda_clienti_vip[0];
+        clienti[*id_cliente - NUM_THREADS_BANCARI] = id;
+
+        /* rimuovo dalla coda il cliente VIP selezionato */
+        for (i = 0; i < contatore_clienti_vip - 1; i++)
+            coda_clienti_vip[i] = coda_clienti_vip[i+1];
+
+        coda_clienti_vip[contatore_clienti_vip -1] = -1;
+        contatore_clienti_vip--;
+
+        /* calcolo la durata del tempo impiegato per l'apertura della cassetta di sicurezza */
+        *durata = mia_random(MAX_DURATA_APERTURA_CASSETTA);
+
+        printf("BANCARIO-[Thread%d e identificatore %lu] faccio entrare il cliente VIP con id %d all'interno dell'area riservata e apro la sua cassetta di sicurezza (tempo di apertura: %d secondi)\n", id, pthread_self(), *id_cliente, *durata);
+    }
+    else    /* in coda ci sono solo clienti normali */
+    {
+        printf("BANCARIO-[Thread%d e identificatore %lu] cliente normale in coda, lo rimuovo dalla coda\n", id, pthread_self());
+
+        /* seleziono il primo cliente normale che e' entrato nella coda */
+        *id_cliente = coda_clienti_normali[0];
+        clienti[*id_cliente - NUM_THREADS_BANCARI] = id;
+
+        /* rimuovo dalla coda il cliente normale selezionato */
+        for (i = 0; i < contatore_clienti_normali - 1; i++)
+            coda_clienti_normali[i] = coda_clienti_normali[i+1];
+
+        coda_clienti_normali[contatore_clienti_normali -1] = -1;
+        contatore_clienti_normali--;
+
+        /* calcolo la durata del tempo impiegato per l'apertura della cassetta di sicurezza */
+        *durata = mia_random(MAX_DURATA_APERTURA_CASSETTA);
+
+        printf("BANCARIO-[Thread%d e identificatore %lu] faccio entrare il cliente normale con id %d all'interno dell'area riservata e apro la sua cassetta di sicurezza (tempo di apertura: %d secondi)\n", id, pthread_self(), *id_cliente, *durata);
+    }
+
+    /* notifico il cliente di averlo selezionato per entrare all'interno dell'area riservata */
+    pthread_cond_broadcast(&attesa_ingresso);
 
     pthread_mutex_unlock(&mutex);   /* simulazione del termine di una procedure entry di un monitor */
 }
 
-void FINE_LAVORO(int id)
+void FINE_LAVORO(int id, int id_cliente)
 {
     pthread_mutex_lock(&mutex); /* simulazione dell'ingresso nella procedure entry di un monitor */
 
+    printf("BANCARIO-[Thread%d e identificatore %lu] apertura della cassetta di sicurezza del cliente avente id %d completata\n",id, pthread_self(), id_cliente);
 
+    /* modifico lo stato del cliente in CLIENTE_SERVITO (-2) */
+    clienti[id_cliente - NUM_THREADS_BANCARI] = CLIENTE_SERVITO;
+
+    /* notifico il cliente di aver terminato l'apertura della sua cassetta di sicurezza, pertanto puo' procedere a visionarla */
+    pthread_cond_broadcast(&attesa_apertura);
 
     pthread_mutex_unlock(&mutex);   /* simulazione del termine di una procedure entry di un monitor */
 }
@@ -136,13 +244,15 @@ void *eseguiClienteVIP(void *id)
     /* genero la durata della visione del contenuto della cassetta di sicurezza */
     durata = mia_random(MAX_DURATA_VISIONE_CASSETTA);
 
+    printf("CLIENTE_VIP-[Thread%d e identificatore %lu] inizio la visione della cassetta di sicurezza (durata: %d secondi)\n", *pi, pthread_self(), durata);
+
     /* simulo l'azione di visione del contenuto della cassetta di sicurezza mediante una sleep */
     sleep(durata);
 
     /* notifico di aver appena terminato la visione del contenuto della cassetta di sicurezza */
-    ESCI_BANCA(*pi);
+    ESCI_BANCA(*pi, CLIENTE_VIP);
 
-    printf("CLIENTE_VIP-[Thread%d e identificatore %lu] contenuto visionato, VADO A CASA\n", *pi, pthread_self());
+    printf("CLIENTE_VIP-[Thread%d e identificatore %lu] VADO A CASA\n", *pi, pthread_self());
 
     /* pthread vuole tornare al padre il valore del suo id */
     *ptr = *pi;
@@ -171,13 +281,15 @@ void *eseguiClienteNormale(void *id)
     /* genero la durata della visione del contenuto della cassetta di sicurezza */
     durata = mia_random(MAX_DURATA_VISIONE_CASSETTA);
 
+    printf("CLIENTE_NORMALE-[Thread%d e identificatore %lu] inizio la visione della cassetta di sicurezza (durata: %d secondi)\n", *pi, pthread_self(), durata);
+
     /* simulo l'azione di visione del contenuto della cassetta di sicurezza mediante una sleep */
     sleep(durata);
 
     /* notifico di aver appena terminato la visione del contenuto della cassetta di sicurezza */
-    ESCI_BANCA(*pi);
+    ESCI_BANCA(*pi, CLIENTE_NORMALE);
 
-    printf("CLIENTE_NORMALE-[Thread%d e identificatore %lu] contenuto visionato, VADO A CASA\n", *pi, pthread_self());
+    printf("CLIENTE_NORMALE-[Thread%d e identificatore %lu] VADO A CASA\n", *pi, pthread_self());
 
     /* pthread vuole tornare al padre il valore del suo id */
     *ptr = *pi;
@@ -189,6 +301,7 @@ void *eseguiBancario(void *id)
 {
     int *pi = (int *) id;
     int *ptr;
+    int id_cliente; /* variabile che contiene l'id del thread CLIENTE di cui sto aprendo la cassetta di sicurezza */
     int durata; /* variabile che contiene il numero di secondi, generato in modo random, che il bancario impiega per l'apertura della cassetta di sicurezza  */
 
     ptr = (int *) malloc(sizeof(int));
@@ -203,16 +316,13 @@ void *eseguiBancario(void *id)
     while(1)
     {
         /* mi metto a disposizione per l'apertura della cassetta di sicurezza di un utente */
-        INIZIO_LAVORO(*pi);
-
-        /* genero in modo random il tempo impiegato per l'apertura della cassetta di sicurezza che mi e' stata assegnata */
-        durata = mia_random(MAX_DURATA_APERTURA_CASSETTA);
+        INIZIO_LAVORO(*pi, &id_cliente, &durata);
 
         /* simulo l'azione di apertura della cassetta di sicurezza mediante una sleep */
         sleep(durata);
 
         /* notifico all'utente che la sua cassetta di sicurezza e' pronta per essere visionata */
-        FINE_LAVORO(*pi);
+        FINE_LAVORO(*pi, id_cliente);
     }
 
     /* NB: QUESTA PARTE DI CODICE NON VERRA' MAI ESEGUITA IN QUANTO I BANCARI SONO IN UN CICLO INFINITO */
@@ -349,19 +459,8 @@ int main(int argc, char **argv)
         coda_clienti_vip[i] = -1;
     }
 
-    /* Inizializzo l'array dei clienti attualmente all'interno dell'area riservata */
-    clienti_area_risevata = (int *) malloc(MAX_CLIENTI_CONTEMPORANEAMENTE * sizeof(int));
-    if (clienti_area_risevata == NULL)
-    {
-        sprintf(error, "Errore: Problemi con l'allocazione dell'array dei clienti attualmente all'interno dell'area riservata\n");
-        perror(error);
-        exit(12);
-    }
-    contatore_clienti_area_riservata = 0;
-    for (i = 0; i < MAX_CLIENTI_CONTEMPORANEAMENTE; i++)
-    {
-        clienti_area_risevata[i] = -1;
-    }
+    /* Inizializzo il contatore dei clienti attualmente all'interno dell'area riservata */
+    numero_clienti_area_riservata = 0;
 
     /* Creo i thread BANCARI */
     for (i = 0; i < NUM_THREADS_BANCARI; i++)
@@ -372,7 +471,7 @@ int main(int argc, char **argv)
         {
             sprintf(error, "Errore: SONO IL MAIN E CI SONO STATI PROBLEMI NELLA CREAZIONE DEL thread BANCARIO %d-esimo\n", taskids[i]);
             perror(error);
-            exit(13);
+            exit(12);
         }
         printf("SONO IL MAIN e ho creato il Pthread BANCARIO %i-esimo con id=%lu\n", i, thread[i]);
     }
@@ -391,7 +490,7 @@ int main(int argc, char **argv)
             {
                 sprintf(error, "Errore: SONO IL MAIN E CI SONO STATI PROBLEMI NELLA CREAZIONE DEL thread CLIENTE_VIP %d-esimo\n", taskids[i]);
                 perror(error);
-                exit(14);
+                exit(13);
             }
             printf("SONO IL MAIN e ho creato il Pthread CLIENTE_VIP %i-esimo con id=%lu\n", i, thread[i]);
         }
@@ -403,7 +502,7 @@ int main(int argc, char **argv)
             {
                 sprintf(error, "Errore: SONO IL MAIN E CI SONO STATI PROBLEMI NELLA CREAZIONE DEL thread CLIENTE_NORMALE %d-esimo\n", taskids[i]);
                 perror(error);
-                exit(15);
+                exit(14);
             }
             printf("SONO IL MAIN e ho creato il Pthread CLIENTE_NORMALE %i-esimo con id=%lu\n", i, thread[i]);
         }
@@ -421,6 +520,7 @@ int main(int argc, char **argv)
     /* stampa dello stato finale delle code e dei clienti */
     printf("Contatore coda clienti VIP: %d\n", contatore_clienti_vip);
     printf("Contatore coda clienti normali: %d\n", contatore_clienti_normali);
+    printf("Numero clienti all'interno dell'area riservata: %d\n", numero_clienti_area_riservata);
     printf("Stato clienti: [ ");
     for (i = 0; i < NUM_THREADS_CLIENTI; i++)
     {
