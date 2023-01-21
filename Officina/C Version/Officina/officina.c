@@ -49,6 +49,8 @@ void INIZIA_CONTROLLO(int id, int *durata, int tipo, int *id_auto)
 {
     pthread_mutex_lock(&mutex); /* simulazione dell'ingresso nella procedure entry di un monitor */
 
+    int i;  /* variabile contatore utilizzata per scorrere le code delle auto */
+
     if (tipo == 0)
     {
         /* attendo che ci sia un auto in coda */
@@ -63,11 +65,14 @@ void INIZIA_CONTROLLO(int id, int *durata, int tipo, int *id_auto)
         {
             printf("OPERAIO_TIPO_%d-[Thread%d e identificatore %lu] auto con tipologia BOLLINO BLU in coda, la rimuovo dalla coda\n", tipo, id, pthread_self());
 
-            /* prendo in carica l'ultima auto che c'e' in coda */
-            *id_auto = coda_bollino_blu[contatore_bollino_blu -1];
+            /* prendo in carica la prima auto che c'e' in coda */
+            *id_auto = coda_bollino_blu[0];
             automobili[*id_auto - NUM_THREADS_OPERAI] = id;
 
             /* rimuovo l'auto dalla coda */
+            for (i = 0; i < contatore_bollino_blu - 1; i++)
+                coda_bollino_blu[i] = coda_bollino_blu[i+1];
+
             coda_bollino_blu[contatore_bollino_blu -1] = -1;
             contatore_bollino_blu--;
 
@@ -80,11 +85,14 @@ void INIZIA_CONTROLLO(int id, int *durata, int tipo, int *id_auto)
         {
             printf("OPERAIO_TIPO_%d-[Thread%d e identificatore %lu] auto con tipologia TAGLIANDO in coda, la rimuovo dalla coda\n", tipo, id, pthread_self());
 
-            /* prendo in carica l'ultima auto che c'e' in coda */
-            *id_auto = coda_tagliando[contatore_tagliando -1];
+            /* prendo in carica la prima auto che c'e' in coda */
+            *id_auto = coda_tagliando[0];
             automobili[*id_auto - NUM_THREADS_OPERAI] = id;
 
             /* rimuovo l'auto dalla coda */
+            for (i = 0; i < contatore_tagliando - 1; i++)
+                coda_tagliando[i] = coda_tagliando[i+1];
+
             coda_tagliando[contatore_tagliando -1] = -1;
             contatore_tagliando--;
 
@@ -105,11 +113,14 @@ void INIZIA_CONTROLLO(int id, int *durata, int tipo, int *id_auto)
 
         printf("OPERAIO_TIPO_%d-[Thread%d e identificatore %lu] auto con tipologia TAGLIANDO in coda, la rimuovo dalla coda\n", tipo, id, pthread_self());
 
-        /* prendo in carica l'ultima auto che c'e' in coda */
-        *id_auto = coda_tagliando[contatore_tagliando -1];
+        /* prendo in carica la prima auto che c'e' in coda */
+        *id_auto = coda_tagliando[0];
         automobili[*id_auto - NUM_THREADS_OPERAI] = id;
 
         /* rimuovo l'auto dalla coda */
+        for (i = 0; i < contatore_tagliando - 1; i++)
+            coda_tagliando[i] = coda_tagliando[i+1];
+
         coda_tagliando[contatore_tagliando -1] = -1;
         contatore_tagliando--;
 
@@ -124,14 +135,14 @@ void INIZIA_CONTROLLO(int id, int *durata, int tipo, int *id_auto)
     pthread_mutex_unlock(&mutex);   /* simulazione del termine di una procedure entry di un monitor */
 }
 
-void FINE_CONTROLLO(int id, int tipo, int *id_auto)
+void FINE_CONTROLLO(int id, int tipo, int id_auto)
 {
     pthread_mutex_lock(&mutex); /* simulazione dell'ingresso nella procedure entry di un monitor */
 
-    printf("OPERAIO_TIPO_%d-[Thread%d e identificatore %lu] controllo sull'auto %d TERMINATO\n", tipo, id, pthread_self(), *id_auto);
+    printf("OPERAIO_TIPO_%d-[Thread%d e identificatore %lu] controllo sull'auto %d TERMINATO\n", tipo, id, pthread_self(), id_auto);
 
     /* modifico lo stato dell'auto in controllo effettuato (-2) */
-    automobili[*id_auto - NUM_THREADS_OPERAI] = AUTO_SERVITA;
+    automobili[id_auto - NUM_THREADS_OPERAI] = AUTO_SERVITA;
 
     /* notifico l'auto del completamento del controllo */
     pthread_cond_broadcast(&attesa_termine);
@@ -266,7 +277,7 @@ void *eseguiOperaioTipo0(void *id)
         /* effettuo il controllo */
         sleep(durata);
 
-        FINE_CONTROLLO(*pi, 0, &id_auto);
+        FINE_CONTROLLO(*pi, 0, id_auto);
     }
 
     /* NB: QUESTA PARTE DI CODICE NON VERRA' MAI ESEGUITA IN QUANTO GLI OPERAI SONO IN UN CICLO INFINITO */
@@ -302,7 +313,7 @@ void *eseguiOperaioTipo1(void *id)
         /* effettuo il controllo */
         sleep(durata);
 
-        FINE_CONTROLLO(*pi, 1, &id_auto);
+        FINE_CONTROLLO(*pi, 1, id_auto);
     }
 
     /* NB: QUESTA PARTE DI CODICE NON VERRA' MAI ESEGUITA IN QUANTO GLI OPERAI SONO IN UN CICLO INFINITO */
