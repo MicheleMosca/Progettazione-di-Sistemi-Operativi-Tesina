@@ -1,4 +1,4 @@
-/* OBIETTIVO: generare un numero non noto di threads OPERAI e AUTO per la soluzione del problema dell'OFFICINA.
+/* OBIETTIVO: generare un numero non noto di threads OPERAI e AUTO per risolvere il problema dell'OFFICINA.
  * I thread operai sono suddivisi in OPERAI di tipo 0 e OPERAI di tipo 1 mediante il vincolo che ogni tre operai, due devono essere di tipo 0 e uno di tipo 1.
  * Gli operai di tipo 1 sono autorizzati a effettuare controlli per il bollino blu e i tagliandi, mentre gli operai di tipo 0 sono autorizzati soltanto a effettuare i tagliandi.
  * Prima verranno creati i thread OPERAI e successivamente i thread AUTO.

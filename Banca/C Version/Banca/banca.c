@@ -1,4 +1,13 @@
-/* OBIETTIVO: */
+/* OBIETTIVO: generare un numero non noto di threads BANCARI e CLIENTI per risolvere il problema della Banca.
+ * I thread clienti sono suddivisi in clienti VIP e clienti normali.
+ * I thread clienti VIP hanno priorita' rispetto ai clienti normali.
+ * Non possono esserci piu' di MAX clienti contemporaneamente all'interno dell'area riservata.
+ * Il numero MAX di clienti sara' fornito in input e dovra' essere molto maggiore del numero B di bancari. Imponendo che per molto maggiore si intende almeno il doppio.
+ * I thread Bancari verranno creati per primi e rimarranno in attesa che un cliente si presenti in banca.
+ * Una volta che il cliente si presenta in banca, se non si ha ancora superato il numero massimo di clienti all'interno dell'area riservata, verra' accompagnato all'interno dell'are riservata e dovra' attendere che il bancario apra la sua cassetta di sicurezza, in un tempo random deciso dal bancario.
+ * Aperta la cassetta di sicurezza del cliente, il bancario e' libero di servire un altro utente. Nel frattempo l'utente visionera' il contenuto della cassetta di sicurezza, in un tempo random deciso dal cliente, dopodiché potra' tornare a casa liberando un posto all'interno dell'aera riservata.
+ * I thread clienti verranno creati dopo i thread bancari e si posizioneranno nella rispettiva coda di attesa in base alla loro tipologia di cliente (VIP o normale).
+ * */
 
 #include <pthread.h>
 #include <stdio.h>
