@@ -76,7 +76,7 @@ void ENTRA_BANCA(int id, int tipo_cliente)
     /* sveglio i bancari in attesa per poter essere servito */
     pthread_cond_broadcast(&clienti_in_coda);
 
-    while(clienti[id - NUM_THREADS_BANCARI] == CLIENTE_NON_SERVITO)
+    while(clienti[id - NUM_THREADS_BANCARI] == CLIENTE_NON_SERVITO) /* e' necessario per il corretto funzionamento di questa soluzione, utilizzare un while per verificare nuovamente la condizione */
     {
         /* mi metto in attesa che un bancario mi faccia accedere all'area riservata per potermi aprire la cassetta di sicurezza */
         pthread_cond_wait(&attesa_ingresso, &mutex);
@@ -90,7 +90,7 @@ void ENTRA_BANCA(int id, int tipo_cliente)
     else
         printf("CLIENTE_NORMALE-[Thread%d e identificatore %lu] il bancario con id %d mi ha appena accompagnato nell'area riservata, attendo che apra la cassetta di sicurezza (clienti all'interno dell'area riservata: %d)\n", id, pthread_self(), clienti[id - NUM_THREADS_BANCARI], numero_clienti_area_riservata);
 
-    while(clienti[id - NUM_THREADS_BANCARI] != CLIENTE_SERVITO)
+    while(clienti[id - NUM_THREADS_BANCARI] != CLIENTE_SERVITO) /* e' necessario per il corretto funzionamento di questa soluzione, utilizzare un while per verificare nuovamente la condizione */
     {
         /* mi metto in attesa che il bancario termini l'apertura della cassetta di sicurezza */
         pthread_cond_wait(&attesa_apertura, &mutex);
@@ -124,7 +124,7 @@ void INIZIO_LAVORO(int id, int *id_cliente, int *durata)
     int i;  /* variabile contatore utilizzata per scorrere le code dei clienti */
 
     /* attendo che ci sia un cliente in coda e che non siano esauriti i posti all'interno dell'area riservata */
-    while((contatore_clienti_vip == 0 && contatore_clienti_normali == 0) || numero_clienti_area_riservata >= MAX_CLIENTI_CONTEMPORANEAMENTE)
+    while((contatore_clienti_vip == 0 && contatore_clienti_normali == 0) || numero_clienti_area_riservata >= MAX_CLIENTI_CONTEMPORANEAMENTE)    /* e' necessario per il corretto funzionamento di questa soluzione, utilizzare un while per verificare nuovamente la condizione */
     {
         if (contatore_clienti_vip == 0 && contatore_clienti_normali == 0)
             printf("BANCARIO-[Thread%d e identificatore %lu] nessun cliente e' in coda, mi sospendo\n", id, pthread_self());
