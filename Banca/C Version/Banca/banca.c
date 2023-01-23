@@ -355,9 +355,9 @@ int main(int argc, char **argv)
     int NUM_THREADS_CLIENTI;    /* variabile che contiene il numero totale di threads di tipo CLIENTI, dunque la somma tra CLIENTI_NORMALI e CLIENTI_VIP, che verranno creati */
 
     /* Controllo sul numero di parametri */
-    if (argc != 5)  /* Soltanto quattro parametri devono essere passati; Il numero di BANCARI, il numero MAX_CLIENTI_CONTEMPORANEAMENTE (che indica il numero massimo di utenti che possono essere presenti contemporaneamente nell'area riservata), il numero di CLIENTI_NORMALI e il numero di CLIENTI_VIP */
+    if (argc != 5)  /* Soltanto quattro parametri devono essere passati; Il numero di NUM_BANCARI, il numero MAX_CLIENTI_CONTEMPORANEAMENTE (che indica il numero massimo di utenti che possono essere presenti contemporaneamente nell'area riservata), il numero di NUM_CLIENTI_NORMALI e il numero di NUM_CLIENTI_VIP */
     {
-        sprintf(error, "Errore: Numero dei parametri non corretto. Utilizzo: %s BANCARI MAX_CLIENTI_CONTEMPORANEAMENTE CLIENTI_NORMALI CLIENTI_VIP \n", argv[0]);
+        sprintf(error, "Errore: Numero dei parametri non corretto. Utilizzo: %s NUM_BANCARI MAX_CLIENTI_CONTEMPORANEAMENTE NUM_CLIENTI_NORMALI NUM_CLIENTI_VIP \n", argv[0]);
         perror(error);
         exit(1);
     }
