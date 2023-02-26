@@ -1,4 +1,4 @@
-# Progettazione di Sistemi Operativi Tesina
+# Tesina di Progettazione di Sistemi Operativi
 In questo repository verranno presentate le soluzioni a quattro problemi tipici della Programmazione Concorrente.
 I seguenti problemi verranno prima svolti mediante l'uso del costrutto `Monitor` in `Java` e successivamente verranno rivisitati in `C` mediante l'uso dei `PThreads`.
 
