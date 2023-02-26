@@ -5,13 +5,13 @@ I seguenti problemi verranno prima svolti mediante l'uso del costrutto `Monitor`
 ## Problemi
 I quattro problemi tipici della Programmazione Concorrente sono:
 
-- [Banca](Banca/Banca.pdf)
-- [Elicottero](Elicottero/Elicottero.pdf)
-- [Officina](Officina/Officina.pdf)
-- [Vetrina Online](Vetrina%20Online/Vetrina%20Online.pdf)
+- [Banca](Banca/)
+- [Elicottero](Elicottero/)
+- [Officina](Officina/)
+- [Vetrina Online](Vetrina%20Online/)
 
 ## Documentazione
-La documentazione è disponibile attraverso il seguente link: [Documentazione](Elaborato_Progettazione_di_Sistemi_Operativi.pdf)
+La documentazione ed i testi dei problemi sono disponibili attraverso il seguente link: [Documentazione](Elaborato_Progettazione_di_Sistemi_Operativi.pdf)
 
 ## Credits
 L'idea di progetto nasce con la finalità di sostenere l'esame di Progettazione di Sistemi Operativi della professoressa Letizia Leonardi. Realizzato da Michele Mosca.
