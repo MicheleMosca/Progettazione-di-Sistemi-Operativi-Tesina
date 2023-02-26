@@ -1,18 +1,4 @@
-// PRINCIPI di SISTEMI OPERATIVI
-// Esame 10 Dicembre 2010
-
-/**
- * Classe monitor
- * classe che rappresenta l'elicottero
- * @author: Michele Mosca
- */
-
 import monitor.*;
-
-//**********************************************************************/ 
-// definizione di una classe che vuole rappresentare un tipo MONITOR:   /
-// deve ereditare dalla classe astratta Monitor							/
-//**********************************************************************/ 
 
 class Elicottero extends Monitor
 {
@@ -110,7 +96,7 @@ class Elicottero extends Monitor
         this.occupati = 0;
         this.in_volo = false;
 
-        // Sveglio i passeggeri in attesa (rispettando la prioritˆ: 1 poi 0=
+        // Sveglio i passeggeri in attesa (rispettando la priorita': 1 poi 0)
         for(int i=1; i>=0; i--)
         {
             temp = this.attesa[i];

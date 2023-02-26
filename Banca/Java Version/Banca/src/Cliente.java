@@ -1,8 +1,3 @@
-/***********
- *
- * @author Michele Mosca
- * Esame 15 Gennaio 2014
- */
 public class Cliente extends Thread
 {
 

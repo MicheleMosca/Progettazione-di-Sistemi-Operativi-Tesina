@@ -1,9 +1,3 @@
-/****
- * Prova in Itinere 15/12/2014
- * @author Michele Mosca
- *
- */
-
 public class ProvaVetrina
 {
 

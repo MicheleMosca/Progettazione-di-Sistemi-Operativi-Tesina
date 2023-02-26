@@ -1,11 +1,3 @@
-// SISTEMI OPERATIVI
-// Esame del 16 Luglio 2010
-
-/**
- * Classe Operaio
- * rappresenta il thread dell'operaio che lavora in officina
- * @author: Michele Mosca
- */
 class operaio extends Thread
 {
     private officina o;

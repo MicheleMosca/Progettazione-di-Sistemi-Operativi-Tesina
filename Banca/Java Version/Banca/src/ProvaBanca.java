@@ -1,13 +1,5 @@
-/*******
- *
- * @author Michele Mosca
- * Esame 15 gennaio 2014
- * Main
- */
 public class ProvaBanca
 {
-
-
     public static void main (String args[])
     {
 

@@ -1,11 +1,5 @@
-/**
- * Classe main
- * @author Michele Mosca
- */
-
 public class Prova_volo
 {
-
     public static void main(String args[])
     {
         // Variabili di inizializzazione del programma

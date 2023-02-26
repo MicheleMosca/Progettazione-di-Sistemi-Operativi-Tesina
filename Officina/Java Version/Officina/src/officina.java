@@ -1,18 +1,4 @@
-// PRINCIPI di SISTEMI OPERATIVI
-// Esame 16 Luglio 2010
-
-/**
- * Classe monitor
- * classe che rappresenta l'officina
- * @author: Michele Mosca
- */
-
 import monitor.*;
-
-//**********************************************************************/ 
-// definizione di una classe che vuole rappresentare un tipo MONITOR:   /
-// deve ereditare dalla classe astratta Monitor							/
-//**********************************************************************/ 
 
 class officina extends Monitor
 {
@@ -60,14 +46,16 @@ class officina extends Monitor
     ////////////////////////////////////////////////////////////
     //	  PROCEDURE ENTRY DELL'OPERAIO  		  			  //
     ////////////////////////////////////////////////////////////
-    public void inizia_controllo(int tipo, String nome, int id) {
+
+    public void inizia_controllo(int tipo, String nome, int id) 
+    {
         entraMonitor();
         tipo_operaio[id] = tipo;
 
         libero[id] = true;
 
         // Risveglio le auto in attesa per il controllo per segnalare loro l'evento
-        // devo rispettare le priorità
+        // devo rispettare le priorita'
         if(tipo == 0)
         {
             if(coda_fuori[BOLLINO].queue())
@@ -116,6 +104,7 @@ class officina extends Monitor
     ////////////////////////////////////////////////////////////
     //				PROCEDURE ENTRY DELL'AUTO				  //
     ////////////////////////////////////////////////////////////
+
     public void entra(int controllo, int numero, String nome)
     {
         entraMonitor();

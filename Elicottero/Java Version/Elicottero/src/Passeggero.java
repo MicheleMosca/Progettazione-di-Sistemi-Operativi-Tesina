@@ -1,11 +1,3 @@
-// Principi di SISTEMI OPERATIVI
-// Esame del 10 Dicembre 2010
-
-/**
- * Classe Utente
- * rappresenta il thread dell'utente che vuole volare
- * @author: Michele Mosca
- */
 class Passeggero extends Thread
 {
     private Elicottero e; //monitor

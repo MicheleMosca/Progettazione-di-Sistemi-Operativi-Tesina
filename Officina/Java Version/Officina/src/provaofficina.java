@@ -1,14 +1,5 @@
-/**
- * Esame 16 Luglio 2010
- * Class provaofficina
- * contiente il main
- * @author Michele Mosca
- *
- */
-
 class provaofficina
 {
-
     public static void main(String args[])
     {
         // Variabili di inizializzazione del programma
@@ -39,6 +30,4 @@ class provaofficina
             new auto(o, (Math.random() > 0.5? 1:0), i, "Auto "+(i)).start();
         }
     }
-
-
 }

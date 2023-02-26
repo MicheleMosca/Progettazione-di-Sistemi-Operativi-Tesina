@@ -1,9 +1,3 @@
-/************
- * @author Michele Mosca
- * ESAME 15 Gennaio 2014
- * Classe monitor
- */
-
 import monitor.*;
 
 public class Banca extends Monitor
@@ -126,8 +120,8 @@ public class Banca extends Monitor
         attesaApertura[id].Signal(); 	// segnalo al cliente che ho aperto al cassetta
         bancario_libero[id] = true;
 
-        if (attesaBancario[VIP].queue())
-        { // sveglio utenti in attesa rispettando prioritÃ
+        if (attesaBancario[VIP].queue()) // sveglio utenti in attesa rispettando priorita'
+        {
             attesaBancario[VIP].Signal();
         }
         else

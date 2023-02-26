@@ -1,9 +1,3 @@
-/******************
- *
- * @author Michele Mosca
- * Esame 15 gennaio 2014
- *
- */
 public class Bancario extends Thread
 {
 

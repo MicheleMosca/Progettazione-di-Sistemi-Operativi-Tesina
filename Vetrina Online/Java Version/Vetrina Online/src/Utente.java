@@ -1,9 +1,3 @@
-/**
- * Prova in itinere 15/12/2014
- * Processo Utente
- * @author Michele Mosca
- *
- */
 public class Utente extends Thread
 {
 

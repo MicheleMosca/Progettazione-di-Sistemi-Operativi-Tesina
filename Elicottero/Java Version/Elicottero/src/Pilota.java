@@ -1,11 +1,3 @@
-// Principi di SISTEMI OPERATIVI
-// Esame del 10 Dicembre 2010
-
-/**
- * Classe Pilota
- * rappresenta il thread del pilota dell'elicottero
- * @author: Michele Mosca
- */
 class Pilota extends Thread
 {
     private Elicottero e; //monitor

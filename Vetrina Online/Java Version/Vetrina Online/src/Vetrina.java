@@ -1,7 +1,3 @@
-/**
- * Prova in itinere 15/12/2015
- * Monitor
- */
 import monitor.*;
 
 public class Vetrina extends Monitor

@@ -1,10 +1,3 @@
-/**
- *
- * Prova in itinere 15/12/2014
- * Processo Corriere
- * @author Michele Mosca
- *
- */
 public class Corriere extends Thread {
 
     Vetrina v;
